@@ -1,0 +1,19 @@
+{
+  "name": "ChatMessageBroadcast",
+  "namespace": "com.chatservice",
+  "type": "record",
+  "fields": [
+    {
+      "name": "message",
+      "type": "string"
+    },
+    {
+      "name": "from",
+      "type": "long"
+    },
+    {
+      "name": "chatRoomId",
+      "type": "long"
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+spring:
+  application:
+    name:chat-service
+  kafka:
+    bootstrap-servers: kafka1:9092,kafka2:9092,kafka3:9092
+    properties:
+      schema.registry.url: http://scheam-registry:8081
+  datasource:
+    host: "mariadb"
+    port: 3306
+    username: "root"
+    password: 1234
+    database: zzapkaotalk
+  flyway:
+    enabled: false
+  jpa:
+    show-sql: true
+    generate-ddl: true
+    hibernate:
+      ddl-auto: create
+    properties:
+      hibernate:
+        show_sql: true
+    open-in-view: false
+eureka:
+  client:
+    enabled: false
