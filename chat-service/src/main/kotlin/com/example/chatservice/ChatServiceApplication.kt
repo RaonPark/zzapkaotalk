@@ -1,13 +1,14 @@
 package com.example.chatservice
 
 import org.springframework.boot.autoconfigure.SpringBootApplication
+import org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration
 import org.springframework.boot.runApplication
-import org.springframework.data.jpa.repository.config.EnableJpaAuditing
-import org.springframework.data.jpa.repository.config.EnableJpaRepositories
+import org.springframework.data.r2dbc.config.EnableR2dbcAuditing
+import org.springframework.data.r2dbc.repository.config.EnableR2dbcRepositories
 
-@EnableJpaRepositories(basePackages = ["com.example.chatservice.repository"])
-@EnableJpaAuditing
-@SpringBootApplication
+@SpringBootApplication(exclude = [RedisRepositoriesAutoConfiguration::class])
+@EnableR2dbcRepositories(basePackages = ["com.example.chatservice.reactive.repository"])
+@EnableR2dbcAuditing
 class ChatServiceApplication
 
 fun main(args: Array<String>) {

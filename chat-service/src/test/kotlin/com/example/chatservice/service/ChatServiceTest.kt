@@ -1,69 +1,72 @@
 package com.example.chatservice.service
 
+import com.example.chatservice.TestcontainersConfiguration
 import com.example.chatservice.bdd.BDDSyntax.Given
 import com.example.chatservice.bdd.BDDSyntax.Then
 import com.example.chatservice.bdd.BDDSyntax.When
 import com.example.chatservice.converter.ChatMessageDtoConverter
 import com.example.chatservice.dto.ChatMessageRequest
-import com.example.chatservice.repository.ChatRoomRepository
-import com.example.chatservice.repository.UserRepository
-import com.example.chatservice.entity.ChatRoom
-import com.example.chatservice.entity.Users
 import com.example.chatservice.exception.ChatRoomNotFoundException
 import com.example.chatservice.exception.UserNotFoundException
-import com.example.chatservice.repository.ChatMessageRepository
-import com.example.chatservice.repository.ChatRoomUsersRepository
-import com.example.chatservice.tdd.TestcontainersTDDConfiguration
+import com.example.chatservice.reactive.entity.Chatroom
+import com.example.chatservice.reactive.entity.User
+import com.example.chatservice.reactive.repository.ChatMessageReactiveRepository
+import com.example.chatservice.reactive.repository.ChatroomReactiveRepository
+import com.example.chatservice.reactive.repository.ChatroomUsersReactiveRepository
+import com.example.chatservice.reactive.repository.UserReactiveRepository
 import io.github.oshai.kotlinlogging.KotlinLogging
+import io.mockk.coEvery
+import io.mockk.coVerify
+import io.mockk.mockk
+import io.mockk.spyk
 import org.junit.jupiter.api.assertThrows
-import org.mockito.Mockito
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.context.TestConfiguration
 import org.springframework.context.annotation.Import
+import org.springframework.data.r2dbc.core.R2dbcEntityTemplate
+import org.springframework.data.redis.core.ReactiveRedisOperations
 import org.springframework.test.context.ActiveProfiles
-import org.springframework.test.context.bean.override.mockito.MockitoBean
-import org.springframework.test.context.bean.override.mockito.MockitoSpyBean
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
 @TestConfiguration(proxyBeanMethods = false)
 @ActiveProfiles("test")
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@Import(TestcontainersTDDConfiguration::class)
+@Import(TestcontainersConfiguration::class)
 class ChatServiceTest {
     val log = KotlinLogging.logger {  }
 
-    @MockitoSpyBean
-    private lateinit var chatService: ChatService
+    private val chatMessageRepository = mockk<ChatMessageReactiveRepository>()
 
-    @MockitoBean
-    private lateinit var chatMessageRepository: ChatMessageRepository
+    private val chatRoomRepository = mockk<ChatroomReactiveRepository>()
 
-    @MockitoBean
-    private lateinit var chatRoomRepository: ChatRoomRepository
+    private val userRepository = mockk<UserReactiveRepository>()
 
-    @MockitoBean
-    private lateinit var userRepository: UserRepository
+    private val chatRoomUsersRepository = mockk<ChatroomUsersReactiveRepository>()
 
-    @MockitoBean
-    private lateinit var chatRoomUsersRepository: ChatRoomUsersRepository
+    private val r2dbcTemplate = mockk<R2dbcEntityTemplate>()
 
-    @Autowired
-    @Qualifier("chatMessageDtoConverterImpl")
-    private lateinit var chatMessageConverter: ChatMessageDtoConverter
+    private val chatMessageConverter = mockk<ChatMessageDtoConverter>()
+
+    private val userRedisOperations = mockk<ReactiveRedisOperations<String, User>>()
+
+    private val chatService = spyk(ChatService(
+        chatMessageRepository, chatMessageConverter, chatRoomUsersRepository, userRepository,
+        chatRoomRepository, r2dbcTemplate, userRedisOperations
+    ))
 
     @Test
     fun `insert a new chat`() {
         Given("Given Chats") {
-            val user = Users(
-                userId = 1L,
+            val user = User(
+                id = 1L,
                 nickname = "raonpark",
                 profileImage = "Default_IMG"
             )
 
-            val chatRoom = ChatRoom(
+            val chatRoom = Chatroom(
                 id = 1L,
                 roomName = "채팅방1",
                 roomDescription = "테스트 채팅방입니다.",
@@ -76,14 +79,11 @@ class ChatServiceTest {
                 chatRoomId = 1L
             )
 
-            Mockito.`when`(userRepository.findUserById(1L))
-                .thenReturn(user)
+            coEvery { userRepository.findById(1L) } returns user
 
-            Mockito.`when`(chatRoomUsersRepository.countChatRoomUsersByChatRoomId(Mockito.anyLong()))
-                .thenReturn(100)
+            coEvery { chatRoomUsersRepository.countChatroomUsersByChatroomId(any()) } returns 100
 
-            Mockito.`when`(chatRoomRepository.findChatRoomById(1L))
-                .thenReturn(chatRoom)
+            coEvery { chatRoomRepository.findById(1L) } returns chatRoom
 
             When("insert Chats") {
                 val result = chatService.insertChat(chatMessage)
@@ -98,7 +98,7 @@ class ChatServiceTest {
     @Test
     fun `throw UserNotFoundException when inserting an entity with no user exists`() {
         Given("Given") {
-            val chatRoom = ChatRoom(
+            val chatRoom = Chatroom(
                 id = 1L,
                 roomName = "테스트 채팅방",
                 roomDescription = "테스트 채팅방입니다.",
@@ -111,18 +111,16 @@ class ChatServiceTest {
                 chatRoomId = 1L
             )
 
-            Mockito.`when`(chatRoomRepository.findChatRoomById(1L))
-                .thenReturn(chatRoom)
+            coEvery { chatRoomRepository.findChatroomById(1L) } returns chatRoom
 
-            Mockito.`when`(userRepository.findUserById(20394L))
-                .thenThrow(UserNotFoundException::class.java)
+            coEvery { userRepository.findById(20394L) } throws UserNotFoundException(20394L)
 
             When("") {
                 assertThrows<UserNotFoundException> { chatService.insertChat(chatMessage) }
 
                 Then("verify") {
-                    Mockito.verify(chatRoomRepository, Mockito.atMostOnce()).findChatRoomById(1L)
-                    Mockito.verify(userRepository, Mockito.atMostOnce()).findUserById(20394L)
+                    coVerify(exactly = 1) { chatRoomRepository.findById(1L) }
+                    coVerify(exactly = 1) { userRepository.findById(20394L) }
                 }
             }
         }
@@ -131,14 +129,13 @@ class ChatServiceTest {
     @Test
     fun `throw ChatRoomNotFoundException when inserting an entity with no chatroom exists`() {
         Given("") {
-            val user = Users(
-                userId = 1L,
+            val user = User(
+                id = 1L,
                 nickname = "raonpark",
                 profileImage = "Default_IMG"
             )
 
-            Mockito.`when`(userRepository.findUserById(1L))
-                .thenReturn(user)
+            coEvery { userRepository.findById(1L) } returns user
 
             val chatMessage = ChatMessageRequest(
                 content = "Hello World! to different room : 1",
@@ -150,8 +147,8 @@ class ChatServiceTest {
                 assertThrows<ChatRoomNotFoundException> { chatService.insertChat(chatMessage) }
 
                 Then("verify") {
-                    Mockito.verify(chatRoomRepository, Mockito.atMostOnce()).findChatRoomById(2393474L)
-                    Mockito.verify(userRepository, Mockito.atMostOnce()).findUserById(1L)
+                    coVerify(exactly = 1) { chatRoomRepository.findById(2393474L) }
+                    coVerify(exactly = 1) { userRepository.findById(1L) }
                 }
             }
         }

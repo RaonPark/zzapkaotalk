@@ -33,7 +33,6 @@ extra["springCloudVersion"] = "2025.0.0"
 
 dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-batch")
-	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 	implementation("org.springframework.boot:spring-boot-starter-data-redis-reactive")
 	implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
 	implementation("org.springframework.boot:spring-boot-starter-quartz")
@@ -52,11 +51,13 @@ dependencies {
 	implementation("org.springframework.cloud:spring-cloud-starter-openfeign")
 	implementation("org.springframework.kafka:spring-kafka")
 	implementation("org.springframework.data:spring-data-r2dbc")
+	implementation("org.springframework.boot:spring-boot-starter-data-r2dbc")
 	implementation("org.mariadb:r2dbc-mariadb")
 	implementation("io.github.oshai:kotlin-logging-jvm:7.0.3")
 	implementation("org.mapstruct:mapstruct:1.6.3")
 	implementation("org.apache.avro:avro:1.12.0")
 	implementation("io.confluent:kafka-avro-serializer:7.9.0")
+	implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
 	kapt("org.mapstruct:mapstruct-processor:1.6.3")
 	runtimeOnly("io.netty:netty-resolver-dns-native-macos:4.2.2.Final:osx-aarch_64")
 	runtimeOnly("org.mariadb.jdbc:mariadb-java-client")
@@ -71,6 +72,8 @@ dependencies {
 	testImplementation("org.testcontainers:junit-jupiter")
 	testImplementation("org.testcontainers:kafka")
 	testImplementation("org.testcontainers:mariadb")
+	testImplementation("io.mockk:mockk:1.14.4")
+	testImplementation("org.testcontainers:r2dbc")
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 

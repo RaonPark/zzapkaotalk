@@ -1,22 +1,27 @@
 package com.example.chatservice.reactive.entity
 
-import jakarta.persistence.Id
-import jakarta.persistence.PostLoad
-import jakarta.persistence.PostPersist
+import com.fasterxml.jackson.annotation.JsonCreator
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import org.springframework.data.annotation.CreatedDate
+import org.springframework.data.annotation.Id
 import org.springframework.data.annotation.LastModifiedDate
+import org.springframework.data.annotation.PersistenceCreator
+import org.springframework.data.annotation.Transient
 import org.springframework.data.domain.Persistable
+import org.springframework.data.relational.core.mapping.Table
 import java.time.LocalDateTime
 
-data class ChatRoomUsers(
+@Table("chatroom")
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class Chatroom @PersistenceCreator @JsonCreator constructor(
     @Id
     var id: Long,
 
-    var userId: Long,
+    var roomName: String,
 
-    var chatRoomId: Long,
+    var roomImage: String = "Default_IMG",
 
-    var role: String,
+    var roomDescription: String = "",
 
     @CreatedDate
     var createdDate: LocalDateTime = LocalDateTime.now(),
@@ -31,9 +36,7 @@ data class ChatRoomUsers(
 
     override fun isNew() = _isNew
 
-    @PostLoad
-    @PostPersist
-    protected fun load() {
+    fun load() {
         _isNew = false
     }
 }

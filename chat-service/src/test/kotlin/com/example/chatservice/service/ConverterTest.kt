@@ -1,15 +1,17 @@
 package com.example.chatservice.service
 
+import com.example.chatservice.TestcontainersConfiguration
 import com.example.chatservice.bdd.BDDSyntax
 import com.example.chatservice.bdd.BDDSyntax.Then
 import com.example.chatservice.bdd.BDDSyntax.When
 import com.example.chatservice.converter.ChatMessageDtoConverter
 import com.example.chatservice.dto.ChatMessageRequest
-import com.example.chatservice.repository.ChatRoomRepository
-import com.example.chatservice.repository.UserRepository
-import com.example.chatservice.entity.ChatRoom
-import com.example.chatservice.entity.Users
-import com.example.chatservice.tdd.TestcontainersTDDConfiguration
+import com.example.chatservice.reactive.entity.Chatroom
+import com.example.chatservice.reactive.entity.User
+import com.example.chatservice.reactive.repository.ChatroomReactiveRepository
+import com.example.chatservice.reactive.repository.UserReactiveRepository
+import kotlinx.coroutines.reactor.awaitSingle
+import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertNotNull
@@ -18,41 +20,52 @@ import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.context.TestConfiguration
 import org.springframework.context.annotation.Import
+import org.springframework.data.r2dbc.core.R2dbcEntityTemplate
 import org.springframework.test.context.ActiveProfiles
+import java.time.LocalDateTime
 import kotlin.test.assertEquals
 
 @SpringBootTest
 @ActiveProfiles("test")
-@Import(TestcontainersTDDConfiguration::class)
+@Import(TestcontainersConfiguration::class)
 @TestConfiguration(proxyBeanMethods = false)
 class ConverterTest {
     @Autowired
-    private lateinit var userRepository: UserRepository
+    private lateinit var userRepository: UserReactiveRepository
 
     @Autowired
-    private lateinit var chatRoomRepository: ChatRoomRepository
+    private lateinit var chatRoomRepository: ChatroomReactiveRepository
 
     @Autowired
     @Qualifier("chatMessageDtoConverterImpl")
     private lateinit var converter: ChatMessageDtoConverter
 
+    @Autowired
+    private lateinit var r2dbcTemplate: R2dbcEntityTemplate
+
     @BeforeEach
     fun setUp() {
-        val user = Users(
-            userId = 1L,
+        val user = User(
+            id = 1L,
             nickname = "raonpark",
             profileImage = "https://profile.img?id=1"
         )
-        userRepository.save(user)
+        runBlocking {
+            r2dbcTemplate.insert(user)
+                .awaitSingle()
+        }
 
-        val chatRoom = ChatRoom(
+        val chatRoom = Chatroom(
             id = 1L,
             roomName = "Promotion",
             roomDescription = "Let's talk with Chess!",
             roomImage = "https://room.profile.img?id=1"
         )
 
-        chatRoomRepository.save(chatRoom)
+        runBlocking {
+            r2dbcTemplate.insert(chatRoom)
+                .awaitSingle()
+        }
     }
 
     @Test
@@ -65,12 +78,16 @@ class ConverterTest {
                 chatRoomId = 1L
             )
 
-            When("") {
-                val chatMessageEntity = converter.convertRequestToModel(chatMessageRequest)
+            When("convert dto to entity") {
+                val chatMessageEntity = converter.convertRequestToModel(chatMessageRequest).also { entity ->
+                    entity.createdDate = LocalDateTime.now()
+                    entity.modifiedDate = LocalDateTime.now()
+                }
 
-                Then("") {
-                    assertEquals(1L, chatMessageEntity.chatRoom.id)
-                    assertNotNull(chatMessageEntity.from)
+                Then("assertion") {
+                    assertEquals(1L, chatMessageEntity.chatRoomId)
+                    assertNotNull(chatMessageEntity.fromUserId)
+                    assertEquals(0L, chatMessageEntity.id)
                 }
 
             }

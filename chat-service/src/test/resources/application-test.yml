@@ -1,15 +1,6 @@
 spring:
   flyway:
-    enabled: false
-  jpa:
-    show-sql: true
-    generate-ddl: true
-    hibernate:
-      ddl-auto: create
-    properties:
-      hibernate:
-        show_sql: true
-    open-in-view: false
+    enabled: true
 server:
   port: 8081
 # eureka

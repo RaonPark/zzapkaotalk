@@ -13,7 +13,7 @@ class KafkaTopicConfig {
         return TopicBuilder.name("chat-message-broadcast")
             .config(TopicConfig.COMPRESSION_TYPE_CONFIG, "producer")
             .partitions(10)
-            .replicas(2)
+            .replicas(1)
             .build()
     }
 }
