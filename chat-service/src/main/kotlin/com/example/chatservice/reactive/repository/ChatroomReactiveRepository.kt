@@ -1,9 +1,10 @@
 package com.example.chatservice.reactive.repository
 
-import com.example.chatservice.reactive.entity.User
+import com.example.chatservice.reactive.entity.Chatroom
 import org.springframework.data.repository.kotlin.CoroutineCrudRepository
 import org.springframework.stereotype.Repository
 
 @Repository
-interface UserReactiveRepository: CoroutineCrudRepository<User, Long> {
+interface ChatroomReactiveRepository: CoroutineCrudRepository<Chatroom, Long> {
+    suspend fun findChatroomById(id: Long): Chatroom?
 }

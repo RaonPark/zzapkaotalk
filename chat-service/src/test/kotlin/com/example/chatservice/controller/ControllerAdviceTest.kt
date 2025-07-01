@@ -1,24 +1,22 @@
 package com.example.chatservice.controller
 
 import com.example.chatservice.dto.ChatMessageRequest
-import com.example.chatservice.entity.ChatRoom
-import com.example.chatservice.entity.Users
 import com.example.chatservice.exception.UserNotFoundException
-import com.example.chatservice.repository.ChatRoomRepository
-import com.example.chatservice.repository.UserRepository
+import com.example.chatservice.reactive.entity.Chatroom
+import com.example.chatservice.reactive.entity.User
+import com.example.chatservice.reactive.repository.ChatroomReactiveRepository
+import com.example.chatservice.reactive.repository.UserReactiveRepository
 import com.example.chatservice.tdd.TestcontainersTDDConfiguration
 import io.github.oshai.kotlinlogging.KotlinLogging
+import io.mockk.coEvery
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
-import org.mockito.Mockito
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.context.TestConfiguration
-import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.context.annotation.Import
 import org.springframework.http.HttpHeaders
-import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.bean.override.mockito.MockitoBean
@@ -38,10 +36,10 @@ class ControllerAdviceTest {
     private lateinit var chatController: ChatController
 
     @MockitoBean
-    private lateinit var chatRoomRepository: ChatRoomRepository
+    private lateinit var chatRoomRepository: ChatroomReactiveRepository
 
     @MockitoBean
-    private lateinit var userRepository: UserRepository
+    private lateinit var userRepository: UserReactiveRepository
 
     private val log = KotlinLogging.logger {}
 
@@ -51,12 +49,13 @@ class ControllerAdviceTest {
 
     @Test
     fun `test @ControllerAdvice and throw ChatRoomNotFoundException`() {
-        Mockito.`when`(userRepository.findUserById(1L))
-            .thenReturn(Users(
-                userId = 1L,
-                nickname = "raonpark",
-                profileImage = "https://cdn.image.user?id=1"
-            ))
+        coEvery {
+            userRepository.findById(1L)
+        } returns User(
+            id = 1L,
+            nickname = "raonpark",
+            profileImage = "https://cdn.image.user?id=1"
+        )
 
         val response = webTestClient.post().uri("/chatting")
             .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
@@ -81,15 +80,14 @@ class ControllerAdviceTest {
 
     @Test
     fun `test @ControllerAdvice with @Controller itself and throw UserNotFoundException`() {
-        Mockito.`when`(chatRoomRepository.findChatRoomById(1L))
-            .thenReturn(
-                ChatRoom(
+        coEvery { chatRoomRepository.findById(1L) } returns
+                Chatroom(
                     id = 1L,
                     roomName = "테스트 채팅방",
                     roomDescription = "테스트 채팅방입니다.",
                     roomImage = "https://cdn.image.room?id=1"
                 )
-            )
+
 
         assertThrows<UserNotFoundException> {
             chatController.postChatting(
@@ -98,7 +96,7 @@ class ControllerAdviceTest {
                     chatRoomId = 1L,
                     content = "테스트"
                 )
-            )
+            ).subscribe()
         }
     }
 }

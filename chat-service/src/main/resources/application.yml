@@ -1,6 +1,6 @@
 spring:
   application:
-    name:chat-service
+    name: chat-service
   kafka:
     bootstrap-servers: kafka1:9092,kafka2:9092,kafka3:9092
     properties:

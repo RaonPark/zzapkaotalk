@@ -1,6 +1,6 @@
 package com.example.chatservice.exception
 
-import jakarta.persistence.EntityNotFoundException
+open class EntityNotFoundException(message: String) : RuntimeException(message)
 
 class UserNotFoundException(userId: Long): EntityNotFoundException("userId $userId not found") {}
 
