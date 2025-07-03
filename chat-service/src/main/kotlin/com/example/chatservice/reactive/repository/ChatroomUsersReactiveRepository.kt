@@ -6,5 +6,5 @@ import org.springframework.stereotype.Repository
 
 @Repository
 interface ChatroomUsersReactiveRepository: CoroutineCrudRepository<ChatroomUsers, Long> {
-    fun countChatroomUsersByChatroomId(chatRoomId: Long): Int
+    suspend fun countChatroomUsersByChatroomId(chatRoomId: Long): Int
 }

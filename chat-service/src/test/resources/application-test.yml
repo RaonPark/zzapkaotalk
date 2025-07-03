@@ -1,6 +1,9 @@
 spring:
   flyway:
     enabled: true
+  rsocket:
+    server:
+      mapping-path: /rsocket
 server:
   port: 8081
 # eureka

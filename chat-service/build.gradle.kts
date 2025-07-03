@@ -58,6 +58,7 @@ dependencies {
 	implementation("org.apache.avro:avro:1.12.0")
 	implementation("io.confluent:kafka-avro-serializer:7.9.0")
 	implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
+	implementation("org.springframework.boot:spring-boot-starter-rsocket")
 	kapt("org.mapstruct:mapstruct-processor:1.6.3")
 	runtimeOnly("io.netty:netty-resolver-dns-native-macos:4.2.2.Final:osx-aarch_64")
 	runtimeOnly("org.mariadb.jdbc:mariadb-java-client")
@@ -74,6 +75,7 @@ dependencies {
 	testImplementation("org.testcontainers:mariadb")
 	testImplementation("io.mockk:mockk:1.14.4")
 	testImplementation("org.testcontainers:r2dbc")
+	testImplementation("app.cash.turbine:turbine:1.2.1")
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 

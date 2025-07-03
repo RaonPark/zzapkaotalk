@@ -1,6 +1,7 @@
 package com.example.chatservice.controller
 
 import com.example.chatservice.dto.ChatMessageRequest
+import com.example.chatservice.dto.ChatMessageResponse
 import com.example.chatservice.dto.GetAllChatMessagesResponse
 import com.example.chatservice.service.ChatService
 import kotlinx.coroutines.flow.Flow
@@ -17,14 +18,8 @@ class ChatController(
     private val chatService: ChatService,
 ) {
     @PostMapping("/chatting")
-    fun postChatting(@RequestBody chatMessageRequest: ChatMessageRequest): Mono<ResponseEntity<Int>> {
-        val result = chatService.insertChat(chatMessageRequest)
-
-        return if(result != -1) {
-            Mono.just(ResponseEntity.ok(result))
-        } else {
-            Mono.just(ResponseEntity.internalServerError().body(-1))
-        }
+    suspend fun postChatting(@RequestBody chatMessageRequest: ChatMessageRequest): ChatMessageResponse {
+        return chatService.insertChat(chatMessageRequest)
     }
 
     @GetMapping("/chat/{chatRoomId}/{userId}/{pageOffSet}")

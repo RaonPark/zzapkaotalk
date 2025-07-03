@@ -10,14 +10,12 @@ import com.example.chatservice.reactive.entity.User
 import com.example.chatservice.reactive.repository.ChatroomReactiveRepository
 import com.example.chatservice.reactive.repository.UserReactiveRepository
 import com.example.chatservice.service.ChatService
-import io.mockk.mockk
 import kotlinx.coroutines.reactor.awaitSingle
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient
-import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.context.annotation.Import
 import org.springframework.data.r2dbc.core.R2dbcEntityTemplate
