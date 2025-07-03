@@ -3,7 +3,6 @@ package com.example.chatservice.controller
 import com.example.chatservice.TestcontainersConfiguration
 import com.example.chatservice.bdd.BDDSyntax
 import com.example.chatservice.bdd.BDDSyntax.When
-import com.example.chatservice.dto.GetAllChatMessagesResponse
 import com.example.chatservice.reactive.entity.ChatMessage
 import com.example.chatservice.reactive.entity.Chatroom
 import com.example.chatservice.reactive.entity.User

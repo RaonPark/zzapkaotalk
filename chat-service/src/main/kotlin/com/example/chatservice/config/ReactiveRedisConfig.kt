@@ -1,11 +1,8 @@
 package com.example.chatservice.config
 
-import com.example.chatservice.dto.ChatMessageRequest
+import com.chatservice.ChatMessageBroadcast
 import com.example.chatservice.reactive.entity.User
-import com.fasterxml.jackson.databind.MapperFeature
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.SerializationFeature
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import org.springframework.cache.annotation.EnableCaching
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -21,12 +18,12 @@ import org.springframework.data.redis.serializer.StringRedisSerializer
 @EnableCaching
 class ReactiveRedisConfig {
     @Bean
-    fun reactiveRedisTemplate(factory: ReactiveRedisConnectionFactory, objectMapper: ObjectMapper): ReactiveRedisTemplate<String, ChatMessageRequest> {
+    fun reactiveRedisTemplate(factory: ReactiveRedisConnectionFactory, objectMapper: ObjectMapper): ReactiveRedisTemplate<String, ChatMessageBroadcast> {
         val keySerializer = StringRedisSerializer()
-        val valueSerializer = Jackson2JsonRedisSerializer(objectMapper, ChatMessageRequest::class.java)
+        val valueSerializer = Jackson2JsonRedisSerializer(objectMapper, ChatMessageBroadcast::class.java)
 
         val serializationContext = RedisSerializationContext
-            .newSerializationContext<String, ChatMessageRequest>()
+            .newSerializationContext<String, ChatMessageBroadcast>()
             .key(keySerializer)
             .value(valueSerializer)
             .hashKey(keySerializer)

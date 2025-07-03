@@ -1,6 +1,7 @@
 package com.example.chatservice.converter
 
 import com.example.chatservice.dto.ChatMessageRequest
+import com.example.chatservice.dto.ChatMessageResponse
 import com.example.chatservice.dto.GetAllChatMessagesResponse
 import com.example.chatservice.reactive.entity.ChatMessage
 import org.mapstruct.*
@@ -44,4 +45,16 @@ interface ChatMessageDtoConverter {
         ]
     )
     fun convertModelToGetAllChatMessagesResponse(chatMessage: ChatMessage): GetAllChatMessagesResponse
+
+    @Mappings(
+        value = [
+            Mapping(source = "content", target = "content"),
+            Mapping(target = "nickname", ignore = true),
+            Mapping(source = "createdDate", target = "createdTime", qualifiedByName = ["formatDateTime"]),
+            Mapping(source = "fromUserId", target = "userId"),
+            Mapping(source = "chatRoomId", target = "chatRoomId"),
+            Mapping(target = "profileImage", ignore = true),
+        ]
+    )
+    fun convertModelToResponse(chatMessage: ChatMessage): ChatMessageResponse
 }

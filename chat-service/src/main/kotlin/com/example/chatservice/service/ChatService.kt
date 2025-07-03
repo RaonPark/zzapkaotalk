@@ -2,10 +2,9 @@ package com.example.chatservice.service
 
 import com.example.chatservice.converter.ChatMessageDtoConverter
 import com.example.chatservice.dto.ChatMessageRequest
-import com.example.chatservice.dto.GetAllChatMessagesRequest
+import com.example.chatservice.dto.ChatMessageResponse
 import com.example.chatservice.dto.GetAllChatMessagesResponse
 import com.example.chatservice.exception.UserNotFoundException
-import com.example.chatservice.reactive.entity.ChatMessage
 import com.example.chatservice.reactive.entity.User
 import com.example.chatservice.reactive.repository.ChatMessageReactiveRepository
 import com.example.chatservice.reactive.repository.ChatroomReactiveRepository
@@ -23,10 +22,7 @@ import kotlinx.coroutines.reactor.awaitSingleOrNull
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.r2dbc.core.R2dbcEntityTemplate
 import org.springframework.data.redis.core.ReactiveRedisOperations
-import org.springframework.data.redis.core.ReactiveRedisTemplate
 import org.springframework.stereotype.Service
-import reactor.core.publisher.Flux
-import java.time.LocalDateTime
 
 @Service
 class ChatService(
@@ -43,7 +39,7 @@ class ChatService(
         val snowflakeIdGenerator = SnowflakeIdGenerator(MachineIdGenerator.machineId())
     }
 
-    fun insertChat(chatMessageRequest: ChatMessageRequest): Int {
+    suspend fun insertChat(chatMessageRequest: ChatMessageRequest): ChatMessageResponse {
         val chatMessage = chatMessageDtoConverter.convertRequestToModel(chatMessageRequest)
             .also { chatMessage ->
                 chatMessage.id = snowflakeIdGenerator.nextId()
@@ -52,10 +48,26 @@ class ChatService(
 
         log.info { "insert chat message: $chatMessage" }
 
-        r2dbcTemplate.insert(chatMessage)
-            .subscribe()
+        val savedChat = r2dbcTemplate.insert(chatMessage).awaitSingle()
 
-        return chatMessage.checked
+        return chatMessageDtoConverter.convertModelToResponse(savedChat)
+            .also { chat ->
+                val user = getUserFromCacheIfMissedFromDB(chat.userId)
+                chat.nickname = user.nickname
+                chat.profileImage = user.profileImage
+            }
+    }
+
+    private suspend fun getUserFromCacheIfMissedFromDB(userId: Long): User {
+        val userIdKey = userId.toString()
+        var userFromCache = userRedisOperations.opsForValue().get(userIdKey).awaitSingleOrNull()
+
+        if(userFromCache == null) {
+            userFromCache = userRepository.findById(userId) ?: throw UserNotFoundException(userId)
+            userRedisOperations.opsForValue().set("$userId", userFromCache).awaitSingle()
+        }
+
+        return userFromCache
     }
 
     suspend fun selectAllChats(chatRoomId: Long, userId: Long, pageOffSet: Int): Flow<GetAllChatMessagesResponse> {
@@ -93,7 +105,7 @@ class ChatService(
 
             if(usersFromDB.isNotEmpty()) {
                 val newCacheData = usersFromDB.associateBy { "${it.id}" }
-                userRedisOperations.opsForValue().multiSet(newCacheData).subscribe()
+                userRedisOperations.opsForValue().multiSet(newCacheData).awaitSingle()
             }
 
             usersFromDB.associateBy { it.id }

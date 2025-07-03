@@ -9,6 +9,7 @@ import com.example.chatservice.reactive.repository.UserReactiveRepository
 import com.example.chatservice.tdd.TestcontainersTDDConfiguration
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.mockk.coEvery
+import io.mockk.coVerify
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -88,15 +89,16 @@ class ControllerAdviceTest {
                     roomImage = "https://cdn.image.room?id=1"
                 )
 
-
-        assertThrows<UserNotFoundException> {
-            chatController.postChatting(
-                ChatMessageRequest(
-                    fromUserId = 1L,
-                    chatRoomId = 1L,
-                    content = "테스트"
+        coVerify {
+            assertThrows<UserNotFoundException> {
+                chatController.postChatting(
+                    ChatMessageRequest(
+                        fromUserId = 1L,
+                        chatRoomId = 1L,
+                        content = "테스트"
+                    )
                 )
-            ).subscribe()
+            }
         }
     }
 }

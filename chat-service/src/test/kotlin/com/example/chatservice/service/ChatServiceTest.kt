@@ -19,9 +19,8 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import io.mockk.spyk
+import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.assertThrows
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.context.TestConfiguration
 import org.springframework.context.annotation.Import
@@ -86,10 +85,12 @@ class ChatServiceTest {
             coEvery { chatRoomRepository.findById(1L) } returns chatRoom
 
             When("insert Chats") {
-                val result = chatService.insertChat(chatMessage)
+                runBlocking {
+                    val result = chatService.insertChat(chatMessage)
 
-                Then("returns total number of users of chat room") {
-                    assertEquals(100, result)
+                    Then("returns total number of users of chat room") {
+                        assertEquals(1L, result.chatRoomId)
+                    }
                 }
             }
         }
@@ -116,7 +117,9 @@ class ChatServiceTest {
             coEvery { userRepository.findById(20394L) } throws UserNotFoundException(20394L)
 
             When("") {
-                assertThrows<UserNotFoundException> { chatService.insertChat(chatMessage) }
+                runBlocking {
+                    assertThrows<UserNotFoundException> { chatService.insertChat(chatMessage) }
+                }
 
                 Then("verify") {
                     coVerify(exactly = 1) { chatRoomRepository.findById(1L) }
@@ -144,7 +147,9 @@ class ChatServiceTest {
             )
 
             When("") {
-                assertThrows<ChatRoomNotFoundException> { chatService.insertChat(chatMessage) }
+                runBlocking {
+                    assertThrows<ChatRoomNotFoundException> { chatService.insertChat(chatMessage) }
+                }
 
                 Then("verify") {
                     coVerify(exactly = 1) { chatRoomRepository.findById(2393474L) }

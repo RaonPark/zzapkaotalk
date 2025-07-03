@@ -57,8 +57,9 @@ class TestcontainersConfiguration {
 				withNetworkAliases("schema-registry")
 				withEnv("SCHEMA_REGISTRY_HOST_NAME", "schema-registry")
 				withEnv("SCHEMA_REGISTRY_CUB_KAFKA_MIN_BROKERS", "1")
-				withEnv("SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS", "PLAINTEXT://kafka:19092")
+				withEnv("SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS", "PLAINTEXT://kafka1:19092")
 				withEnv("SCHEMA_REGISTRY_LISTENERS", "http://0.0.0.0:8085")
+				waitingFor(Wait.forHttp("/subjects").forStatusCode(200))
 			}
 
 		return schemaRegistryContainer
@@ -75,6 +76,8 @@ class TestcontainersConfiguration {
 			registry.add("spring.datasource.database") { mariaDBContainer.databaseName }
 			registry.add("spring.datasource.host") { mariaDBContainer.host }
 			registry.add("spring.datasource.port") { mariaDBContainer.firstMappedPort }
+
+			registry.add("spring.kafka.properties.schema.registry.url") { "http://${schemaRegistryContainer.host}:${schemaRegistryContainer.firstMappedPort}" }
 		}
 	}
 }
