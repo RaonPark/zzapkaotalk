@@ -1,0 +1,26 @@
+{
+  "name": "DirectChatMessageBroadcast",
+  "namespace": "com.chatservice",
+  "type": "record",
+  "fields": [
+    {
+      "name": "fromUserId",
+      "type": "long"
+    },
+    {
+      "name": "toUserId",
+      "type": "long"
+    },
+    {
+      "name": "message",
+      "type": "string"
+    },
+    {
+      "name": "createdTime",
+      "type": {
+        "type": "long",
+        "logicalType": "timestamp-millis"
+      }
+    }
+  ]
+}

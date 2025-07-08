@@ -76,6 +76,7 @@ dependencies {
 	testImplementation("io.mockk:mockk:1.14.4")
 	testImplementation("org.testcontainers:r2dbc")
 	testImplementation("app.cash.turbine:turbine:1.2.1")
+	testImplementation("org.awaitility:awaitility-kotlin:4.3.0")
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 

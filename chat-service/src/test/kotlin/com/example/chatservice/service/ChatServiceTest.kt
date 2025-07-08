@@ -4,16 +4,17 @@ import com.example.chatservice.TestcontainersConfiguration
 import com.example.chatservice.bdd.BDDSyntax.Given
 import com.example.chatservice.bdd.BDDSyntax.Then
 import com.example.chatservice.bdd.BDDSyntax.When
-import com.example.chatservice.converter.ChatMessageDtoConverter
-import com.example.chatservice.dto.ChatMessageRequest
+import com.example.chatservice.converter.GroupChatMessageDtoConverter
+import com.example.chatservice.dto.GroupChatMessageRequest
 import com.example.chatservice.exception.ChatRoomNotFoundException
 import com.example.chatservice.exception.UserNotFoundException
 import com.example.chatservice.reactive.entity.Chatroom
 import com.example.chatservice.reactive.entity.User
-import com.example.chatservice.reactive.repository.ChatMessageReactiveRepository
 import com.example.chatservice.reactive.repository.ChatroomReactiveRepository
 import com.example.chatservice.reactive.repository.ChatroomUsersReactiveRepository
+import com.example.chatservice.reactive.repository.GroupChatMessageReactiveRepository
 import com.example.chatservice.reactive.repository.UserReactiveRepository
+import com.example.chatservice.redis.service.RedisService
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -27,6 +28,7 @@ import org.springframework.context.annotation.Import
 import org.springframework.data.r2dbc.core.R2dbcEntityTemplate
 import org.springframework.data.redis.core.ReactiveRedisOperations
 import org.springframework.test.context.ActiveProfiles
+import java.time.LocalDateTime
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -37,7 +39,7 @@ import kotlin.test.assertEquals
 class ChatServiceTest {
     val log = KotlinLogging.logger {  }
 
-    private val chatMessageRepository = mockk<ChatMessageReactiveRepository>()
+    private val chatMessageRepository = mockk<GroupChatMessageReactiveRepository>()
 
     private val chatRoomRepository = mockk<ChatroomReactiveRepository>()
 
@@ -47,13 +49,15 @@ class ChatServiceTest {
 
     private val r2dbcTemplate = mockk<R2dbcEntityTemplate>()
 
-    private val chatMessageConverter = mockk<ChatMessageDtoConverter>()
+    private val chatMessageConverter = mockk<GroupChatMessageDtoConverter>()
 
     private val userRedisOperations = mockk<ReactiveRedisOperations<String, User>>()
 
+    private val redisService = mockk<RedisService>()
+
     private val chatService = spyk(ChatService(
         chatMessageRepository, chatMessageConverter, chatRoomUsersRepository, userRepository,
-        chatRoomRepository, r2dbcTemplate, userRedisOperations
+        chatRoomRepository, r2dbcTemplate, redisService
     ))
 
     @Test
@@ -72,10 +76,11 @@ class ChatServiceTest {
                 roomImage = "Default_IMG"
             )
 
-            val chatMessage = ChatMessageRequest(
+            val chatMessage = GroupChatMessageRequest(
                 content = "Hello World! to different room : 1",
                 fromUserId = 1L,
-                chatRoomId = 1L
+                chatRoomId = 1L,
+                createdTime = LocalDateTime.now(),
             )
 
             coEvery { userRepository.findById(1L) } returns user
@@ -106,10 +111,11 @@ class ChatServiceTest {
                 roomImage = "https://cdn.room.image?id=1"
             )
 
-            val chatMessage = ChatMessageRequest(
+            val chatMessage = GroupChatMessageRequest(
                 content = "Hello World! to different room : 1",
                 fromUserId = 20394L,
-                chatRoomId = 1L
+                chatRoomId = 1L,
+                createdTime = LocalDateTime.now(),
             )
 
             coEvery { chatRoomRepository.findChatroomById(1L) } returns chatRoom
@@ -140,10 +146,11 @@ class ChatServiceTest {
 
             coEvery { userRepository.findById(1L) } returns user
 
-            val chatMessage = ChatMessageRequest(
+            val chatMessage = GroupChatMessageRequest(
                 content = "Hello World! to different room : 1",
                 fromUserId = 1L,
-                chatRoomId = 2393474L
+                chatRoomId = 2393474L,
+                createdTime = LocalDateTime.now(),
             )
 
             When("") {

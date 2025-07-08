@@ -1,13 +1,18 @@
 package com.example.chatservice.controller
 
-import com.chatservice.ChatMessageBroadcast
-import com.example.chatservice.dto.ChatMessageRequest
+import com.chatservice.DirectChatMessageBroadcast
+import com.chatservice.GroupChatMessageBroadcast
+import com.example.chatservice.dto.DirectChatMessageRequest
+import com.example.chatservice.dto.DirectChatMessageResponse
+import com.example.chatservice.dto.GroupChatMessageRequest
+import com.example.chatservice.reactive.entity.DirectChatMessage
 import com.example.chatservice.service.ChatService
-import com.example.chatservice.service.MessageBroadcastService
+import com.example.chatservice.service.DirectChatMessageBroadcastService
+import com.example.chatservice.service.GroupChatMessageBroadcastService
+import com.example.chatservice.service.MessageBroadcaster
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.emitAll
-import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.emptyFlow
 import org.springframework.messaging.handler.annotation.DestinationVariable
 import org.springframework.messaging.handler.annotation.MessageMapping
 import org.springframework.messaging.handler.annotation.Payload
@@ -16,48 +21,64 @@ import org.springframework.stereotype.Controller
 @Controller
 class WebSocketController(
     private val chatService: ChatService,
-    private val messageBroadcastService: MessageBroadcastService
+    private val groupChatMessageBroadcastService: GroupChatMessageBroadcastService,
+    private val directChatMessageBroadcastService: DirectChatMessageBroadcastService,
+    private val messageBroadcaster: MessageBroadcaster
 ) {
     companion object {
         val log = KotlinLogging.logger { }
     }
 
     /**
-     * chat flow:
-     * 1. Chat Message from client delivers to channel {chat.room.chatRoomId}
-     * 2. @MessageMapping is handling requests
-     * 2-1. insert chat message in DB
-     * 2-2. send kafka that inbound message has delivered.
-     * 3. @KafkaListener publish a message using redis pub/sub channel
-     * 4. redis subscriber listens message and emit to MutableSharedFlow
-     * 5. RSocket Controller emits message to clients which subscribe to channel {chat.stream.chatRoomId}
-     *
-     * why use both of kafka and redis?
-     * ->
+     * chat flow DM:
+     * 1. Chat Message mapped rsocket url chat.direct.{userId}
+     * 2. RSocket Controller send Kafka first to make sure message process exactly once and not fly away.
+     * 3. Kafka Producer send a message to Consumer.
+     * 4. Consumer listens and process message and broadcast to toUserId
+     * 5. when toUserId subscribe to chat.direct.stream.{userId} then they can listen messages.
      */
 
     @MessageMapping("chat.room.{chatRoomId}")
     suspend fun chatting(
-        @Payload chatMessageRequest: ChatMessageRequest,
+        @Payload groupChatMessageRequest: GroupChatMessageRequest,
         @DestinationVariable chatRoomId: String,
     ) {
-        log.info { "Received chat message: $chatMessageRequest" }
+        log.info { "Received chat message: $groupChatMessageRequest" }
 
         // insert chat in DB
-        val chatMessageResponse = chatService.insertChat(chatMessageRequest)
+        val chatMessageResponse = chatService.insertChat(groupChatMessageRequest)
 
         // send to kafka that inbound message comes.
-        messageBroadcastService.broadcastToChatRoom(chatMessageResponse)
+        groupChatMessageBroadcastService.broadcastToChatRoom(chatMessageResponse)
     }
 
-    @MessageMapping("chat.stream.{chatRoomId}")
+    @MessageMapping("chat.room.stream.{chatRoomId}")
     suspend fun broadcastChat(
-        @DestinationVariable chatRoomId: String,
-    ): Flow<ChatMessageBroadcast> {
+        @DestinationVariable chatRoomId: Long,
+    ): Flow<GroupChatMessageBroadcast> {
         log.info { "Broadcast chat message: $chatRoomId" }
-        return messageBroadcastService.stream(chatRoomId = chatRoomId.toLong())
-            .onStart {
-                emitAll(messageBroadcastService.getLatestMessages(chatRoomId = chatRoomId.toLong()))
-            }
+        return messageBroadcaster.getGroupChatStream(chatRoomId)
+    }
+
+    @MessageMapping("chat.direct.{userId}")
+    suspend fun chattingDirect(
+        @Payload directChatMessage: DirectChatMessageRequest,
+        @DestinationVariable("userId") userId: Long
+    ) {
+        log.info { "Received direct: $directChatMessage" }
+
+        // insert chat in DB
+        val chatMessageResponse = chatService.insertDirectChat(directChatMessage)
+
+        log.info { "Direct Chat Saved: $chatMessageResponse" }
+
+        directChatMessageBroadcastService.directChatMessageBroadcast(directChatMessage)
+    }
+
+    @MessageMapping("chat.direct.stream.{userId}")
+    suspend fun broadcastDirectChat(@DestinationVariable("userId") userId: Long): Flow<DirectChatMessageResponse> {
+        log.info { "subscribe stream : $userId" }
+
+        return messageBroadcaster.getDirectChatMessageStream(userId)
     }
 }

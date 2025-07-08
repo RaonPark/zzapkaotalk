@@ -1,7 +1,7 @@
 package com.example.chatservice.reactive.repository
 
 import com.example.chatservice.TestcontainersConfiguration
-import com.example.chatservice.reactive.entity.ChatMessage
+import com.example.chatservice.reactive.entity.GroupChatMessage
 import com.example.chatservice.reactive.entity.Chatroom
 import com.example.chatservice.reactive.entity.User
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -21,7 +21,7 @@ import kotlin.time.measureTime
 @TestConfiguration(proxyBeanMethods = false)
 @Import(TestcontainersConfiguration::class)
 @ActiveProfiles("test")
-class ChatMessageReactiveRepositoryTest {
+class GroupGroupChatMessageReactiveRepositoryTest {
     companion object {
         val log = KotlinLogging.logger { }
     }
@@ -33,7 +33,7 @@ class ChatMessageReactiveRepositoryTest {
     private lateinit var userReactiveRepository: UserReactiveRepository
 
     @Autowired
-    private lateinit var chatMessageReactiveRepository: ChatMessageReactiveRepository
+    private lateinit var groupChatMessageReactiveRepository: GroupChatMessageReactiveRepository
 
     @Autowired
     private lateinit var chatRoomUsersReactiveRepository: ChatroomUsersReactiveRepository
@@ -58,7 +58,7 @@ class ChatMessageReactiveRepositoryTest {
 
         val insertElapsedTime = measureTime {
             for(i in 1..100000) {
-                r2dbcTemplate.insert(ChatMessage(
+                r2dbcTemplate.insert(GroupChatMessage(
                     id = i.toLong(),
                     content = "Hello World $i",
                     fromUserId = 1L,
@@ -70,7 +70,7 @@ class ChatMessageReactiveRepositoryTest {
 
 
         val selectElapsedTime = measureTime {
-            chatMessageReactiveRepository.findAllByChatRoomIdOrderByCreatedDateDesc(1L, PageRequest.of(0, 100))
+            groupChatMessageReactiveRepository.findAllByChatRoomIdOrderByCreatedDateDesc(1L, PageRequest.of(0, 100))
                 .collect {
                     log.info { "here is chatRoom: $it" }
                 }

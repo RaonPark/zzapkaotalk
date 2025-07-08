@@ -1,5 +1,5 @@
 {
-  "name": "ChatMessageBroadcast",
+  "name": "GroupChatMessageBroadcast",
   "namespace": "com.chatservice",
   "type": "record",
   "fields": [
@@ -12,22 +12,15 @@
       "type": "long"
     },
     {
-      "name": "profileImage",
-      "type": "string",
-      "default": "Default_IMG"
-    },
-    {
-      "name": "nickname",
-      "type": "string",
-      "default": "(알 수 없음)"
-    },
-    {
       "name": "content",
       "type": "string"
     },
     {
       "name": "createdTime",
-      "type": "string"
+      "type": {
+        "type": "long",
+        "logicalType": "timestamp-millis"
+      }
     }
   ]
 }

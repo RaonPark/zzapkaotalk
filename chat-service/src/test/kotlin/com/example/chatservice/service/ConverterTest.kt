@@ -4,8 +4,8 @@ import com.example.chatservice.TestcontainersConfiguration
 import com.example.chatservice.bdd.BDDSyntax
 import com.example.chatservice.bdd.BDDSyntax.Then
 import com.example.chatservice.bdd.BDDSyntax.When
-import com.example.chatservice.converter.ChatMessageDtoConverter
-import com.example.chatservice.dto.ChatMessageRequest
+import com.example.chatservice.converter.GroupChatMessageDtoConverter
+import com.example.chatservice.dto.GroupChatMessageRequest
 import com.example.chatservice.reactive.entity.Chatroom
 import com.example.chatservice.reactive.entity.User
 import com.example.chatservice.reactive.repository.ChatroomReactiveRepository
@@ -37,8 +37,8 @@ class ConverterTest {
     private lateinit var chatRoomRepository: ChatroomReactiveRepository
 
     @Autowired
-    @Qualifier("chatMessageDtoConverterImpl")
-    private lateinit var converter: ChatMessageDtoConverter
+    @Qualifier("groupChatMessageDtoConverterImpl")
+    private lateinit var converter: GroupChatMessageDtoConverter
 
     @Autowired
     private lateinit var r2dbcTemplate: R2dbcEntityTemplate
@@ -72,14 +72,15 @@ class ConverterTest {
     fun `should return entity with no id and checked`() {
         BDDSyntax.Given("Given ChatMessage Request") {
 
-            val chatMessageRequest = ChatMessageRequest(
+            val groupChatMessageRequest = GroupChatMessageRequest(
                 content = "Hello World",
                 fromUserId = 1L,
-                chatRoomId = 1L
+                chatRoomId = 1L,
+                createdTime = LocalDateTime.now(),
             )
 
             When("convert dto to entity") {
-                val chatMessageEntity = converter.convertRequestToModel(chatMessageRequest).also { entity ->
+                val chatMessageEntity = converter.convertRequestToModel(groupChatMessageRequest).also { entity ->
                     entity.createdDate = LocalDateTime.now()
                     entity.modifiedDate = LocalDateTime.now()
                 }

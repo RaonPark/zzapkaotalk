@@ -3,7 +3,7 @@ package com.example.chatservice.controller
 import com.example.chatservice.TestcontainersConfiguration
 import com.example.chatservice.bdd.BDDSyntax
 import com.example.chatservice.bdd.BDDSyntax.When
-import com.example.chatservice.reactive.entity.ChatMessage
+import com.example.chatservice.reactive.entity.GroupChatMessage
 import com.example.chatservice.reactive.entity.Chatroom
 import com.example.chatservice.reactive.entity.User
 import kotlinx.coroutines.flow.toList
@@ -58,7 +58,7 @@ class ChatControllerTestWithAutowired {
             runBlocking {
                 for (i in 1L..200L) {
                     r2dbcEntityTemplate.insert(
-                        ChatMessage(
+                        GroupChatMessage(
                             id = i,
                             content = "chat message $i",
                             fromUserId = 1L,

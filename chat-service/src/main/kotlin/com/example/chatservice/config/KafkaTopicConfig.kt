@@ -9,8 +9,17 @@ import org.springframework.kafka.config.TopicBuilder
 @Configuration
 class KafkaTopicConfig {
     @Bean
-    fun chatMessageBroadcastTopic(): NewTopic {
-        return TopicBuilder.name("chat-message-broadcast")
+    fun groupChatMessageBroadcastTopic(): NewTopic {
+        return TopicBuilder.name("group-chat-message-broadcast")
+            .config(TopicConfig.COMPRESSION_TYPE_CONFIG, "producer")
+            .partitions(10)
+            .replicas(1)
+            .build()
+    }
+
+    @Bean
+    fun directChatMessageBroadcastTopic(): NewTopic {
+        return TopicBuilder.name("direct-chat-broadcast")
             .config(TopicConfig.COMPRESSION_TYPE_CONFIG, "producer")
             .partitions(10)
             .replicas(1)
