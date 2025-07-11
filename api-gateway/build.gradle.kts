@@ -34,11 +34,17 @@ dependencies {
 	implementation("org.springframework.cloud:spring-cloud-starter-loadbalancer")
 	implementation("org.springframework.cloud:spring-cloud-starter-netflix-eureka-client")
 	implementation("org.springframework.cloud:spring-cloud-starter-openfeign")
+	implementation("org.springframework.cloud:spring-cloud-contract-wiremock")
+	implementation("org.springframework.boot:spring-boot-starter-data-redis-reactive")
+	implementation("io.github.oshai:kotlin-logging-jvm:7.0.3")
+	testImplementation("org.wiremock.integrations:wiremock-spring-boot:3.6.0")
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 	testImplementation("io.projectreactor:reactor-test")
 	testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
 	testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test")
 	testImplementation("org.springframework.security:spring-security-test")
+	testImplementation("org.testcontainers:junit-jupiter")
+	testImplementation("org.springframework.boot:spring-boot-testcontainers")
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
