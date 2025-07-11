@@ -1,9 +1,9 @@
 package com.example.chatservice.converter
 
-import com.example.chatservice.dto.ChatMessageRequest
-import com.example.chatservice.dto.ChatMessageResponse
+import com.example.chatservice.dto.GroupChatMessageRequest
+import com.example.chatservice.dto.GroupChatMessageResponse
 import com.example.chatservice.dto.GetAllChatMessagesResponse
-import com.example.chatservice.reactive.entity.ChatMessage
+import com.example.chatservice.reactive.entity.GroupChatMessage
 import org.mapstruct.*
 import org.mapstruct.MappingConstants.ComponentModel
 import java.time.LocalDateTime
@@ -15,7 +15,7 @@ import java.time.format.DateTimeFormatter
     injectionStrategy = InjectionStrategy.FIELD,
     imports = [LocalDateTime::class, DateTimeFormatter::class]
 )
-interface ChatMessageDtoConverter {
+interface GroupChatMessageDtoConverter {
     companion object {
         @Named("formatDateTime")
         @JvmStatic
@@ -30,31 +30,27 @@ interface ChatMessageDtoConverter {
             Mapping(source = "chatRoomId", target = "chatRoomId"),
             Mapping(source = "fromUserId", target = "fromUserId"),
             Mapping(target = "checked", ignore = true),
-            Mapping(target = "createdDate", expression = "java(LocalDateTime.now())"),
+            Mapping(source = "createdTime", target = "createdDate"),
             Mapping(target = "modifiedDate", expression = "java(LocalDateTime.now())"),
         ]
     )
-    fun convertRequestToModel(chatMessageRequest: ChatMessageRequest): ChatMessage
+    fun convertRequestToModel(groupChatMessageRequest: GroupChatMessageRequest): GroupChatMessage
 
     @Mappings(
         value = [
             Mapping(source = "content", target = "content"),
-            Mapping(target = "nickname", ignore = true),
-            Mapping(target = "profileImage", ignore = true),
-            Mapping(source = "createdDate", target = "createdTime", qualifiedByName = ["formatDateTime"])
+            Mapping(source = "createdDate", target = "createdTime")
         ]
     )
-    fun convertModelToGetAllChatMessagesResponse(chatMessage: ChatMessage): GetAllChatMessagesResponse
+    fun convertModelToGetAllChatMessagesResponse(groupChatMessage: GroupChatMessage): GetAllChatMessagesResponse
 
     @Mappings(
         value = [
             Mapping(source = "content", target = "content"),
-            Mapping(target = "nickname", ignore = true),
-            Mapping(source = "createdDate", target = "createdTime", qualifiedByName = ["formatDateTime"]),
+            Mapping(source = "createdDate", target = "createdTime"),
             Mapping(source = "fromUserId", target = "userId"),
             Mapping(source = "chatRoomId", target = "chatRoomId"),
-            Mapping(target = "profileImage", ignore = true),
         ]
     )
-    fun convertModelToResponse(chatMessage: ChatMessage): ChatMessageResponse
+    fun convertModelToResponse(groupChatMessage: GroupChatMessage): GroupChatMessageResponse
 }

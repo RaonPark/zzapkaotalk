@@ -1,6 +1,6 @@
 package com.example.chatservice.controller
 
-import com.example.chatservice.dto.ChatMessageRequest
+import com.example.chatservice.dto.GroupChatMessageRequest
 import com.example.chatservice.exception.UserNotFoundException
 import com.example.chatservice.reactive.entity.Chatroom
 import com.example.chatservice.reactive.entity.User
@@ -24,6 +24,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.web.reactive.function.BodyInserters
 import reactor.test.StepVerifier
+import java.time.LocalDateTime
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @TestConfiguration(proxyBeanMethods = false)
@@ -62,11 +63,14 @@ class ControllerAdviceTest {
             .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
             .body(
                 BodyInserters.fromValue(
-                 ChatMessageRequest(
-                fromUserId = 1L,
-                chatRoomId = 1L,
-                content = "테스트"
-            )))
+                    GroupChatMessageRequest(
+                        fromUserId = 1L,
+                        chatRoomId = 1L,
+                        content = "테스트",
+                        createdTime = LocalDateTime.now(),
+                    )
+                )
+            )
             .exchange()
             .returnResult(com.example.chatservice.dto.ErrorResponse::class.java)
             .responseBody
@@ -92,10 +96,11 @@ class ControllerAdviceTest {
         coVerify {
             assertThrows<UserNotFoundException> {
                 chatController.postChatting(
-                    ChatMessageRequest(
+                    GroupChatMessageRequest(
                         fromUserId = 1L,
                         chatRoomId = 1L,
-                        content = "테스트"
+                        content = "테스트",
+                        createdTime = LocalDateTime.now(),
                     )
                 )
             }

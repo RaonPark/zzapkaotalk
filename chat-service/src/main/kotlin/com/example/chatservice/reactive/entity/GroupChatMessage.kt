@@ -9,7 +9,7 @@ import java.time.LocalDateTime
 
 @Table("chat_message")
 @JsonIgnoreProperties(ignoreUnknown = true)
-data class ChatMessage @PersistenceCreator @JsonCreator constructor(
+data class GroupChatMessage @PersistenceCreator @JsonCreator constructor(
     @Id
     var id: Long,
 

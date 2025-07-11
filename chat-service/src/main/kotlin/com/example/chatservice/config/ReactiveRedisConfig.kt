@@ -1,7 +1,8 @@
 package com.example.chatservice.config
 
-import com.chatservice.ChatMessageBroadcast
+import com.chatservice.GroupChatMessageBroadcast
 import com.example.chatservice.reactive.entity.User
+import com.example.chatservice.redis.entity.WebSocketSession
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.cache.annotation.EnableCaching
 import org.springframework.context.annotation.Bean
@@ -18,12 +19,12 @@ import org.springframework.data.redis.serializer.StringRedisSerializer
 @EnableCaching
 class ReactiveRedisConfig {
     @Bean
-    fun reactiveRedisTemplate(factory: ReactiveRedisConnectionFactory, objectMapper: ObjectMapper): ReactiveRedisTemplate<String, ChatMessageBroadcast> {
+    fun reactiveRedisTemplate(factory: ReactiveRedisConnectionFactory, objectMapper: ObjectMapper): ReactiveRedisTemplate<String, GroupChatMessageBroadcast> {
         val keySerializer = StringRedisSerializer()
-        val valueSerializer = Jackson2JsonRedisSerializer(objectMapper, ChatMessageBroadcast::class.java)
+        val valueSerializer = Jackson2JsonRedisSerializer(objectMapper, GroupChatMessageBroadcast::class.java)
 
         val serializationContext = RedisSerializationContext
-            .newSerializationContext<String, ChatMessageBroadcast>()
+            .newSerializationContext<String, GroupChatMessageBroadcast>()
             .key(keySerializer)
             .value(valueSerializer)
             .hashKey(keySerializer)
@@ -44,6 +45,21 @@ class ReactiveRedisConfig {
         val valueSerializer = Jackson2JsonRedisSerializer(objectMapper, User::class.java)
 
         val context = RedisSerializationContext.newSerializationContext<String, User>()
+            .key(keySerializer)
+            .value(valueSerializer)
+            .hashKey(keySerializer)
+            .hashValue(valueSerializer)
+            .build()
+
+        return ReactiveRedisTemplate(factory, context)
+    }
+
+    @Bean
+    fun websocketManagerRedisTemplate(factory: ReactiveRedisConnectionFactory, objectMapper: ObjectMapper): ReactiveRedisTemplate<String, WebSocketSession> {
+        val keySerializer = StringRedisSerializer()
+        val valueSerializer = Jackson2JsonRedisSerializer(objectMapper, WebSocketSession::class.java)
+
+        val context = RedisSerializationContext.newSerializationContext<String, WebSocketSession>()
             .key(keySerializer)
             .value(valueSerializer)
             .hashKey(keySerializer)
