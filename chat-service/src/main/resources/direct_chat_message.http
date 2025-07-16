@@ -1,0 +1,11 @@
+RSOCKET chat.direct.1
+Version: 1.2
+Host: localhost:28079
+Content-Type: application/json
+
+{
+  "message": "Hello Tom!",
+  "fromUserId": 1,
+  "toUserId": 2,
+  "timestamp": "2025-07-14T15:28:00"
+}
