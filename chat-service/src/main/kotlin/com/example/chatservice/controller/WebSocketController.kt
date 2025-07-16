@@ -1,32 +1,42 @@
 package com.example.chatservice.controller
 
-import com.chatservice.DirectChatMessageBroadcast
 import com.chatservice.GroupChatMessageBroadcast
 import com.example.chatservice.dto.DirectChatMessageRequest
 import com.example.chatservice.dto.DirectChatMessageResponse
 import com.example.chatservice.dto.GroupChatMessageRequest
-import com.example.chatservice.reactive.entity.DirectChatMessage
-import com.example.chatservice.service.ChatService
-import com.example.chatservice.service.DirectChatMessageBroadcastService
-import com.example.chatservice.service.GroupChatMessageBroadcastService
-import com.example.chatservice.service.MessageBroadcaster
+import com.example.chatservice.reactive.entity.User
+import com.example.chatservice.service.*
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.reactor.awaitSingle
+import org.springframework.data.redis.core.ReactiveRedisOperations
 import org.springframework.messaging.handler.annotation.DestinationVariable
 import org.springframework.messaging.handler.annotation.MessageMapping
 import org.springframework.messaging.handler.annotation.Payload
+import org.springframework.messaging.rsocket.annotation.ConnectMapping
 import org.springframework.stereotype.Controller
+import java.security.Principal
 
 @Controller
 class WebSocketController(
     private val chatService: ChatService,
     private val groupChatMessageBroadcastService: GroupChatMessageBroadcastService,
     private val directChatMessageBroadcastService: DirectChatMessageBroadcastService,
-    private val messageBroadcaster: MessageBroadcaster
+    private val messageBroadcaster: MessageBroadcaster,
+    private val webSocketManager: WebSocketManager,
+    private val userRedisOperations: ReactiveRedisOperations<String, User>
 ) {
     companion object {
         val log = KotlinLogging.logger { }
+    }
+
+    @ConnectMapping
+    suspend fun connect() {
+        val userId = userRedisOperations.opsForValue()["user:1"].awaitSingle()
+
+        webSocketManager.userConnection(userId.id)
+
+        log.info { "RSocket Connected user $userId" }
     }
 
     /**

@@ -1,4 +1,6 @@
 spring:
+  application:
+    name: chat-service
   flyway:
     enabled: true
   rsocket:
@@ -11,6 +13,8 @@ server:
 eureka:
   client:
     enabled: false
+#  instance:
+#    instance-id: ${spring.application.name}:${spring.application.instance_id:${random.value}}
 logging:
   level:
     org.springframework.messaging.rsocket: DEBUG
