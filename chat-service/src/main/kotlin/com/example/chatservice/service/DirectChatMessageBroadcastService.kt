@@ -7,6 +7,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.springframework.kafka.annotation.KafkaListener
 import org.springframework.kafka.core.KafkaTemplate
+import org.springframework.kafka.support.Acknowledgment
 import org.springframework.stereotype.Service
 import java.time.ZoneOffset
 
@@ -14,7 +15,8 @@ import java.time.ZoneOffset
 class DirectChatMessageBroadcastService(
     private val directChatMessageBroadcastKafkaTemplate: KafkaTemplate<Long, DirectChatMessageBroadcast>,
     private val redisService: RedisService,
-    private val chatMessageBroadcaster: MessageBroadcaster
+    private val chatMessageBroadcaster: MessageBroadcaster,
+    private val webSocketManager: WebSocketManager
 ) {
     companion object {
         val log = KotlinLogging.logger { }
@@ -43,11 +45,15 @@ class DirectChatMessageBroadcastService(
         containerFactory = "directChatMessageBroadcastKafkaListenerContainerFactory",
         concurrency = "3"
     )
-    suspend fun listensBroadcast(record: ConsumerRecord<Long, DirectChatMessageBroadcast>) {
+    suspend fun listensBroadcast(record: ConsumerRecord<Long, DirectChatMessageBroadcast>, acknowledgment: Acknowledgment) {
         val message = record.value()
 
         log.info { "Received message $message" }
 
-        chatMessageBroadcaster.broadcastToDirect(message)
+        if(webSocketManager.userConnected(message.toUserId)) {
+            chatMessageBroadcaster.broadcastToDirect(message)
+        }
+
+        acknowledgment.acknowledge()
     }
 }

@@ -76,7 +76,7 @@ class WebSocketManagerTest {
 
         webSocketManager.disconnected(user1)
 
-        assertEquals(false, webSocketManager.isSameSession(user1))
+        assertEquals(false, webSocketManager.userConnected(user1))
 
         verify { mockRedisTemplate.delete(eq(sessionKey)) }
     }

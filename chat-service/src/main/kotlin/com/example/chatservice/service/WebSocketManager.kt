@@ -2,8 +2,8 @@ package com.example.chatservice.service
 
 import com.example.chatservice.redis.entity.WebSocketSession
 import io.github.oshai.kotlinlogging.KotlinLogging
-import jakarta.annotation.PostConstruct
 import kotlinx.coroutines.reactor.awaitSingle
+import kotlinx.coroutines.reactor.awaitSingleOrNull
 import org.springframework.cloud.client.discovery.DiscoveryClient
 import org.springframework.data.redis.core.ReactiveRedisTemplate
 import org.springframework.stereotype.Service
@@ -25,8 +25,9 @@ class WebSocketManager(
             ?: throw IllegalStateException("Current instance ID is missing")
     }
 
-    fun isSameSession(toUserId: Long): Boolean {
-        return localSessions.containsKey(toUserId)
+    suspend fun userConnected(toUserId: Long): Boolean {
+        return websocketManagerRedisTemplate.opsForValue()["session:$toUserId"]
+            .awaitSingle().websocketServer == currentInstanceId
     }
 
     suspend fun userConnection(userId: Long) {
