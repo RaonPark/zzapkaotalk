@@ -1,4 +1,4 @@
-message-service/HELP.md
+HELP.md
 .gradle
 build/
 !gradle/wrapper/gradle-wrapper.jar
@@ -38,6 +38,3 @@ out/
 
 ### Kotlin ###
 .kotlin
-
-### Resource ###
-/api-gateway/src/main/resources/realm-export.json

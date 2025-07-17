@@ -30,13 +30,18 @@ class WebSocketController(
         val log = KotlinLogging.logger { }
     }
 
-    @ConnectMapping
-    suspend fun connect() {
-        val userId = userRedisOperations.opsForValue()["user:1"].awaitSingle()
+    @ConnectMapping("chat.direct.{userId}")
+    suspend fun connect(@DestinationVariable userId: Long) {
+        val user = userRedisOperations.opsForValue()["user:$userId"].awaitSingle()
 
-        webSocketManager.userConnection(userId.id)
+        webSocketManager.userConnection(user.id)
 
         log.info { "RSocket Connected user $userId" }
+    }
+
+    @ConnectMapping("chat.group.{chatroomId}")
+    suspend fun groupChatConnection() {
+
     }
 
     /**

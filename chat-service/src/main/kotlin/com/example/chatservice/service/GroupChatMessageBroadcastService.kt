@@ -32,7 +32,7 @@ class GroupChatMessageBroadcastService(
 
     fun convertResponseToBroadcast(groupChatMessageResponse: GroupChatMessageResponse): GroupChatMessageBroadcast {
         return GroupChatMessageBroadcast.newBuilder()
-            .setContent(groupChatMessageResponse.content)
+            .setMessage(groupChatMessageResponse.content)
             .setChatRoomId(groupChatMessageResponse.chatRoomId)
             .setUserId(groupChatMessageResponse.userId)
             .setCreatedTime(groupChatMessageResponse.createdTime.toInstant(ZoneOffset.of("+9")))

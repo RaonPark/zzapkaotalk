@@ -12,7 +12,7 @@
       "type": "long"
     },
     {
-      "name": "content",
+      "name": "message",
       "type": "string"
     },
     {
