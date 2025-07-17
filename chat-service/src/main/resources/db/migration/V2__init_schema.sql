@@ -40,15 +40,6 @@ CREATE TABLE chatroom_users(
     PRIMARY KEY (id)
 );
 
-CREATE TABLE users(
-    id BIGINT NOT NULL,
-    nickname VARCHAR(100) NOT NULL,
-    profile_image VARCHAR(100) NOT NULL,
-    created_date DATETIME NOT NULL,
-    modified_date DATETIME NOT NULL,
-    PRIMARY KEY (id)
-);
-
 CREATE INDEX idx_group_chat_message_chat_room_id_created_date ON group_chat_message(chat_room_id, created_date desc);
 
 CREATE INDEX idx_direct_chat_message_user_id_created_date ON direct_chat_message(to_user_id, created_at);

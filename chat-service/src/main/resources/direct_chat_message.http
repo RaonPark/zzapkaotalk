@@ -9,3 +9,7 @@ Content-Type: application/json
   "toUserId": 2,
   "timestamp": "2025-07-14T15:28:00"
 }
+
+###
+
+GET http://localhost:8084/chat-service/chat/test

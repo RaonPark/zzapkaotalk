@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.ResponseBody
 
 @Controller
 class ChatController(
@@ -23,5 +24,12 @@ class ChatController(
     @GetMapping("/chat/{chatRoomId}/{userId}/{pageOffSet}")
     suspend fun getAllChatting(@PathVariable chatRoomId: Long, @PathVariable userId: Long, @PathVariable pageOffSet: Int): Flow<GetAllChatMessagesResponse> {
         return chatService.selectAllChats(chatRoomId, userId, pageOffSet)
+    }
+
+    // TODO(테스트가 끝나면 지울것)
+    @ResponseBody
+    @GetMapping("/chat/test")
+    suspend fun testGateway(): String {
+        return "Hello!"
     }
 }

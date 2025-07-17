@@ -3,6 +3,7 @@ package com.example.chatservice.service
 import com.example.chatservice.converter.GroupChatMessageDtoConverter
 import com.example.chatservice.dto.*
 import com.example.chatservice.reactive.entity.DirectChatMessage
+import com.example.chatservice.reactive.entity.GroupChatMessage
 import com.example.chatservice.reactive.repository.ChatroomReactiveRepository
 import com.example.chatservice.reactive.repository.ChatroomUsersReactiveRepository
 import com.example.chatservice.reactive.repository.GroupChatMessageReactiveRepository
@@ -61,6 +62,28 @@ class ChatService(
             .map { message ->
                 groupChatMessageDtoConverter.convertModelToGetAllChatMessagesResponse(message)
             }
+    }
+
+    suspend fun insertGroupChat(groupChatMessageRequest: GroupChatMessageRequest): GroupChatMessageResponse {
+        val numOfChatroomMembers = chatRoomUsersRepository.countChatroomUsersByChatroomId(groupChatMessageRequest.chatRoomId)
+
+        val groupChatMessage = GroupChatMessage(
+            id = snowflakeIdGenerator.nextId(),
+            chatRoomId = groupChatMessageRequest.chatRoomId,
+            createdDate = groupChatMessageRequest.createdTime,
+            content = groupChatMessageRequest.content,
+            fromUserId = groupChatMessageRequest.fromUserId,
+            checked = numOfChatroomMembers,
+        )
+
+        val savedMessage = r2dbcTemplate.insert(groupChatMessage).awaitSingle()
+
+        return GroupChatMessageResponse(
+            userId = savedMessage.id,
+            chatRoomId = savedMessage.chatRoomId,
+            content = savedMessage.content,
+            createdTime = savedMessage.createdDate
+        )
     }
 
     suspend fun insertDirectChat(directChatMessageRequest: DirectChatMessageRequest): DirectChatMessageResponse {

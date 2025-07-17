@@ -1,7 +1,6 @@
-package com.example.chatservice.reactive.entity
+package com.example.apigateway.entity
 
 import com.fasterxml.jackson.annotation.JsonCreator
-import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import org.springframework.data.annotation.CreatedDate
 import org.springframework.data.annotation.Id
@@ -25,7 +24,7 @@ data class User @JsonCreator constructor(
 
     var email: String,
 
-    var password: String,
+    val password: String,
 
     @CreatedDate
     var createdDate: LocalDateTime = LocalDateTime.now(),
