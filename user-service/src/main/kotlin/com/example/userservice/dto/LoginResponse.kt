@@ -1,4 +1,6 @@
 package com.example.userservice.dto
 
-class LoginResponse {
-}
+data class LoginResponse(
+    val success: Boolean,
+    val timestamp: String,
+)

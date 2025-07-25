@@ -1,4 +1,6 @@
 package com.example.userservice.dto
 
-class RegisterResponse {
-}
+data class RegisterResponse(
+    val success: Boolean,
+    val timestamp: String,
+)

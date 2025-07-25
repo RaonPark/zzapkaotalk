@@ -11,9 +11,51 @@ spring:
     schemas: zzapkaotalk
     baseline-on-migrate: true
     baseline-version: 1
+  datasource:
+    host: localhost
+    port: 3306
+    username: admin
+    password: 1234
+    database: zzapkaotalk
+    url: r2dbc:mariadb://localhost:3306/zzapkaotalk
+  mail:
+    jndi-name: mail/Session
+    host: smtp.gmail.com
+    port: 587
+    username:
+    password:
+    properties:
+      mail.smtp.auth: true
+      mail.smtp.starttls.enable: true
+      mail.debug: true
+      mail.transport.protocol: smtp
+  security:
+    oauth2:
+      client:
+        registration:
+          keycloak:
+            provider: keycloak
+            client-id: oauth2-client
+            client-secret: H85Of0PKMGApj1b8DALnmCXaVGqTizGE
+            authorization-grant-type: authorization_code
+            redirect-uri: "http://localhost:8083/login/oauth2/code/{registrationId}"
+            scope:
+              - openid
+              - profile
+              - email
+        provider:
+          keycloak:
+            user-name-attribute: preferred_username
+            issuer-uri: http://localhost:8090/realms/zzapkaotalk
+            authorization-uri: http://localhost:8090/realms/zzapkaotalk/protocol/openid-connect/auth
 eureka:
   client:
     register-with-eureka: true
     fetch-registry: true
     service-url:
       defaultZone: http://localhost:8070/eureka
+server:
+  port: 8083
+logging:
+  level:
+    org.springframework.security: TRACE
