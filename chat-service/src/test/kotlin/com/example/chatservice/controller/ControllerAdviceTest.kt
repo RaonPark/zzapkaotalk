@@ -56,7 +56,9 @@ class ControllerAdviceTest {
         } returns User(
             id = 1L,
             nickname = "raonpark",
-            profileImage = "https://cdn.image.user?id=1"
+            profileImage = "https://cdn.image.user?id=1",
+            email = "raonpark@gmail.com",
+            password = "raonpark",
         )
 
         val response = webTestClient.post().uri("/chatting")

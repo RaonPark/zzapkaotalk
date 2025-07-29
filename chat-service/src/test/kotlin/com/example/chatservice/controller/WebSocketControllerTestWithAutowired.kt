@@ -37,6 +37,8 @@ class WebSocketControllerTestWithAutowired {
                     id = 1L,
                     nickname = "Nick",
                     profileImage = "Nick Avatar",
+                    email = "raonpark@gmail.com",
+                    password = "raonpark",
                     createdDate = LocalDateTime.now(),
                     modifiedDate = LocalDateTime.now(),
                 )
@@ -47,6 +49,8 @@ class WebSocketControllerTestWithAutowired {
                     id = 2L,
                     nickname = "Lick",
                     profileImage = "Lick Avatar",
+                    email = "raonpark@gmail.com",
+                    password = "raonpark",
                     createdDate = LocalDateTime.now(),
                     modifiedDate = LocalDateTime.now(),
                 )

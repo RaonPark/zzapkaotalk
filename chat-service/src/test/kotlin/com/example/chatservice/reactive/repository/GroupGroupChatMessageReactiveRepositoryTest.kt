@@ -47,6 +47,8 @@ class GroupGroupChatMessageReactiveRepositoryTest {
             id = 1L,
             nickname = "testUser",
             profileImage = "testImage",
+            email = "test@test.com",
+            password = "test",
         )).awaitSingle()
 
         r2dbcTemplate.insert(Chatroom(
