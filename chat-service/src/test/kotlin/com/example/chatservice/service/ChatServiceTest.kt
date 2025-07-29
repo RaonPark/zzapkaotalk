@@ -66,7 +66,9 @@ class ChatServiceTest {
             val user = User(
                 id = 1L,
                 nickname = "raonpark",
-                profileImage = "Default_IMG"
+                profileImage = "Default_IMG",
+                email = "raonpark@gmail.com",
+                password = "raonpark",
             )
 
             val chatRoom = Chatroom(
@@ -141,7 +143,9 @@ class ChatServiceTest {
             val user = User(
                 id = 1L,
                 nickname = "raonpark",
-                profileImage = "Default_IMG"
+                profileImage = "Default_IMG",
+                email = "raonpark@gmail.com",
+                password = "raonpark",
             )
 
             coEvery { userRepository.findById(1L) } returns user

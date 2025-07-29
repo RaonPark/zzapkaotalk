@@ -88,6 +88,8 @@ class WebSocketControllerTest {
                     id = 2L,
                     nickname = "tom",
                     profileImage = "avatar",
+                    email = "tom@tom.com",
+                    password = "tom",
                 )
             ).awaitSingle()
 
@@ -96,6 +98,8 @@ class WebSocketControllerTest {
                     id = 1L,
                     nickname = "nick",
                     profileImage = "test nick profile image",
+                    email = "nick@nick.com",
+                    password = "nick",
                 )
             ).awaitSingle()
         }

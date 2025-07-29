@@ -46,6 +46,8 @@ class ChatControllerTestWithAutowired {
                     id = 1L,
                     nickname = "raonpark",
                     profileImage = "https://cdn.image.profile/avatar/avatar.png",
+                    email = "raonpark@gmail.com",
+                    password = "raonpark",
                 )
             ).awaitSingle()
         }

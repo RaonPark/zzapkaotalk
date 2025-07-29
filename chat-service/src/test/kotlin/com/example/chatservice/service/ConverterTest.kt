@@ -48,7 +48,9 @@ class ConverterTest {
         val user = User(
             id = 1L,
             nickname = "raonpark",
-            profileImage = "https://profile.img?id=1"
+            profileImage = "https://profile.img?id=1",
+            email = "raonpark@gmail.com",
+            password = "raonpark",
         )
         runBlocking {
             r2dbcTemplate.insert(user)

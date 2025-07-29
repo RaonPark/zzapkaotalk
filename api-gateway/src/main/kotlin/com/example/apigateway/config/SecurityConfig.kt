@@ -8,14 +8,20 @@ import org.springframework.security.config.annotation.web.reactive.EnableWebFlux
 import org.springframework.security.config.http.SessionCreationPolicy
 import org.springframework.security.config.web.server.ServerHttpSecurity
 import org.springframework.security.config.web.server.invoke
+import org.springframework.security.oauth2.client.oidc.web.server.logout.OidcClientInitiatedServerLogoutSuccessHandler
+import org.springframework.security.oauth2.client.registration.ReactiveClientRegistrationRepository
 import org.springframework.security.oauth2.jose.jws.SignatureAlgorithm
 import org.springframework.security.oauth2.jwt.NimbusReactiveJwtDecoder
 import org.springframework.security.web.server.SecurityWebFilterChain
+import org.springframework.security.web.server.authentication.logout.ServerLogoutSuccessHandler
 import reactor.core.publisher.Mono
 
 @Configuration
 @EnableWebFluxSecurity
-class SecurityConfig {
+class SecurityConfig(
+    private val reactiveClientRegistrationRepository: ReactiveClientRegistrationRepository,
+    private val oAuth2AuthenticationSuccessHandler: OAuth2AuthenticationSuccessHandler
+) {
     @Value("\${spring.security.oauth2.resourceserver.jwt.jwk-set-uri}")
     private val oauth2ResourceServerJwk: String? = null
 
@@ -25,16 +31,16 @@ class SecurityConfig {
             csrf { disable() }
             cors { disable() }
             authorizeExchange {
-                authorize(antPattern = "/login", permitAll)
-                authorize(anyExchange, authenticated)
+                authorize(anyExchange, permitAll)
             }
-            sessionManagement {
-                SessionCreationPolicy.STATELESS
+            oauth2Login {
+                authenticationSuccessHandler = oAuth2AuthenticationSuccessHandler
             }
-            oauth2ResourceServer {
-                jwt {
-                    jwtDecoder = jwtDecoder()
-                }
+            oauth2Client {
+
+            }
+            logout {
+                logoutSuccessHandler = oAuth2LogoutSuccessHandler()
             }
         }
     }
@@ -52,5 +58,16 @@ class SecurityConfig {
             .withJwkSetUri(oauth2ResourceServerJwk)
             .jwsAlgorithm(SignatureAlgorithm.RS256)
             .build()
+    }
+
+    @Bean
+    fun oAuth2LogoutSuccessHandler(): ServerLogoutSuccessHandler {
+        val handler = OidcClientInitiatedServerLogoutSuccessHandler(reactiveClientRegistrationRepository)
+
+        println("logout successful")
+
+        handler.setPostLogoutRedirectUri("{baseUrl}/login")
+
+        return handler
     }
 }
