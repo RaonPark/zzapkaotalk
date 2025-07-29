@@ -31,23 +31,9 @@ spring:
       mail.transport.protocol: smtp
   security:
     oauth2:
-      client:
-        registration:
-          keycloak:
-            provider: keycloak
-            client-id: oauth2-client
-            client-secret: H85Of0PKMGApj1b8DALnmCXaVGqTizGE
-            authorization-grant-type: authorization_code
-            redirect-uri: "http://localhost:8083/login/oauth2/code/{registrationId}"
-            scope:
-              - openid
-              - profile
-              - email
-        provider:
-          keycloak:
-            user-name-attribute: preferred_username
-            issuer-uri: http://localhost:8090/realms/zzapkaotalk
-            authorization-uri: http://localhost:8090/realms/zzapkaotalk/protocol/openid-connect/auth
+      resourceserver:
+        jwt:
+          issuer-uri: "http://localhost:8090/realms/zzapkaotalk"
 eureka:
   client:
     register-with-eureka: true

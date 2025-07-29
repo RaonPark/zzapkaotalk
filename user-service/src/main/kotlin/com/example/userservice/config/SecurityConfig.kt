@@ -1,13 +1,16 @@
 package com.example.userservice.config
 
-import com.example.userservice.support.OAuth2AuthenticationSuccessHandler
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity
+import org.springframework.security.config.http.SessionCreationPolicy
 import org.springframework.security.config.web.server.ServerHttpSecurity
 import org.springframework.security.config.web.server.invoke
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.crypto.password.PasswordEncoder
+import org.springframework.security.oauth2.jose.jws.SignatureAlgorithm
+import org.springframework.security.oauth2.jwt.NimbusReactiveJwtDecoder
 import org.springframework.security.web.server.SecurityWebFilterChain
 
 @Configuration
@@ -15,26 +18,26 @@ import org.springframework.security.web.server.SecurityWebFilterChain
 class SecurityConfig(
 
 ) {
+    @Value("\${spring.security.oauth2.resourceserver.jwt.issuer-uri}")
+    private var issuerUri: String = ""
+
     @Bean
-    fun securityWebFilterChain(
-        http: ServerHttpSecurity,
-        oAuth2AuthenticationSuccessHandler: OAuth2AuthenticationSuccessHandler,
-    ): SecurityWebFilterChain {
+    fun securityWebFilterChain(http: ServerHttpSecurity): SecurityWebFilterChain {
         return http {
             cors { disable() }
             csrf { disable() }
             authorizeExchange {
-                authorize("/login", permitAll)
                 authorize("/register", permitAll)
-                authorize("/callback", permitAll)
-                authorize("/logout", permitAll)
                 authorize(anyExchange, authenticated)
             }
-            oauth2Login {
-                authenticationSuccessHandler = oAuth2AuthenticationSuccessHandler
+            sessionManagement {
+                SessionCreationPolicy.STATELESS
             }
-            oauth2Client {
-
+            oauth2ResourceServer {
+                jwt {
+                    jwtDecoder = jwtDecoder()
+                    jwkSetUri = "$issuerUri/protocol/openid-connect/certs"
+                }
             }
         }
     }
@@ -42,5 +45,12 @@ class SecurityConfig(
     @Bean
     fun passwordEncoder(): PasswordEncoder {
         return BCryptPasswordEncoder()
+    }
+
+    @Bean
+    fun jwtDecoder(): NimbusReactiveJwtDecoder {
+        return NimbusReactiveJwtDecoder.withIssuerLocation(issuerUri)
+            .jwsAlgorithm(SignatureAlgorithm.RS256)
+            .build()
     }
 }

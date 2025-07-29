@@ -24,6 +24,7 @@ import org.springframework.http.ResponseCookie
 import org.springframework.security.core.GrantedAuthority
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.security.oauth2.core.user.OAuth2User
+import org.springframework.security.oauth2.jwt.Jwt
 import org.springframework.stereotype.Service
 import org.springframework.util.LinkedMultiValueMap
 import org.springframework.web.reactive.function.BodyInserters
@@ -60,10 +61,6 @@ class UserService(
         userRedisOperations.opsForValue().set("user:${user.id}", user)
             .awaitSingle()
 
-        if(success) {
-
-        }
-
         return LoginResponse(
             success = success,
             timestamp = LocalDateTime.now().toString(),
@@ -71,18 +68,6 @@ class UserService(
     }
 
     fun doLogout(httpServerWebExchange: ServerWebExchange) {
-    }
-
-    suspend fun doLoginWithKeycloak(oAuth2User: OAuth2User): LoginResponse {
-        val user = userRepository.findByEmail(oAuth2User.getAttribute<String>("email")
-            ?: throw KeycloakException("Email Not Found"))
-
-        userRedisOperations.opsForValue().set("user:${user.id}", user).awaitSingle()
-
-        return LoginResponse(
-            success = true,
-            timestamp = LocalDateTime.now().toString(),
-        )
     }
 
     suspend fun getToken(): String {
@@ -154,17 +139,20 @@ class UserService(
             .statusCode
     }
 
-    suspend fun getUserInfo(serverWebExchange: ServerWebExchange): String {
-        val accessToken = serverWebExchange.request.cookies["access_token"] ?: throw KeycloakException("Access token Not Found")
+    suspend fun getUserInfo(jwt: Jwt): String {
 
-        log.info("access token = {}", accessToken.firstOrNull()?.value)
+        log.info("access token = {}", jwt.tokenValue)
 
         val userInfo = webClient.get()
             .uri("http://localhost:8090/realms/zzapkaotalk/protocol/openid-connect/userinfo")
-            .header("Authorization", "Bearer ${accessToken.first().value}")
+            .header("Authorization", "Bearer ${jwt.tokenValue}")
             .retrieve()
             .awaitBody<String>()
 
         return userInfo
+    }
+
+    suspend fun requestEmailVerification(id: Long) {
+
     }
 }
