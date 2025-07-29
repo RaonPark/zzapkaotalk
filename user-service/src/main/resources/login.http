@@ -1,0 +1,21 @@
+POST http://localhost:8084/auth/user/login
+Content-Type: application/json
+
+{
+  "email": "raonpark@naver.com",
+  "password": "1234"
+}
+
+###
+GET http://localhost:8084/auth/user/callback?code=1234
+
+###
+POST http://localhost:8084/auth/user/register
+Content-Type: application/json
+
+{
+  "email": "testuser2@test.com",
+  "password": "12345678",
+  "profileImage": "https://cdn.avatar.user?id=testuser2",
+  "nickname": "testuser2"
+}

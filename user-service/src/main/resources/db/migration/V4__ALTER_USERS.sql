@@ -1,0 +1,1 @@
+ALTER TABLE users CHANGE COLUMN isVerified is_verified SMALLINT;
