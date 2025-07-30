@@ -52,6 +52,9 @@ class DirectChatMessageBroadcastService(
 
         if(webSocketManager.userConnected(message.toUserId)) {
             chatMessageBroadcaster.broadcastToDirect(message)
+        } else {
+            // TODO(DLQ를 사용하여 메세지를 재전송해본다.)
+            // TODO(이후에 푸시알람쪽으로 넘어간다.)
         }
 
         acknowledgment.acknowledge()

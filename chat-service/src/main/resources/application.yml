@@ -21,7 +21,8 @@ spring:
     password: 1234
     schemas: zzapkaotalk
     baseline-on-migrate: true
-    baseline-version: 3
+    baseline-version: 1
+    table: flyway_schema_history_chat_service
   jpa:
     show-sql: true
     generate-ddl: false
