@@ -14,24 +14,26 @@ import org.springframework.security.oauth2.jose.jws.SignatureAlgorithm
 import org.springframework.security.oauth2.jwt.NimbusReactiveJwtDecoder
 import org.springframework.security.web.server.SecurityWebFilterChain
 import org.springframework.security.web.server.authentication.logout.ServerLogoutSuccessHandler
+import org.springframework.web.cors.reactive.CorsWebFilter
 import reactor.core.publisher.Mono
 
 @Configuration
 @EnableWebFluxSecurity
 class SecurityConfig(
     private val reactiveClientRegistrationRepository: ReactiveClientRegistrationRepository,
-    private val oAuth2AuthenticationSuccessHandler: OAuth2AuthenticationSuccessHandler
+    private val oAuth2AuthenticationSuccessHandler: OAuth2AuthenticationSuccessHandler,
+    private val corsWebFilter: CorsWebFilter
 ) {
-    @Value("\${spring.security.oauth2.resourceserver.jwt.jwk-set-uri}")
-    private val oauth2ResourceServerJwk: String? = null
 
     @Bean
     fun securityWebFilterChain(http: ServerHttpSecurity): SecurityWebFilterChain {
         return http {
             csrf { disable() }
-            cors { disable() }
+            cors { corsWebFilter }
             authorizeExchange {
-                authorize(anyExchange, permitAll)
+                authorize("/login", permitAll)
+                authorize("/logout", permitAll)
+                authorize(anyExchange, authenticated)
             }
             oauth2Login {
                 authenticationSuccessHandler = oAuth2AuthenticationSuccessHandler
@@ -50,14 +52,6 @@ class SecurityConfig(
         return KeyResolver { exchange ->
             Mono.just(exchange.request.remoteAddress!!.address.hostAddress)
         }
-    }
-
-    @Bean
-    fun jwtDecoder(): NimbusReactiveJwtDecoder {
-        return NimbusReactiveJwtDecoder
-            .withJwkSetUri(oauth2ResourceServerJwk)
-            .jwsAlgorithm(SignatureAlgorithm.RS256)
-            .build()
     }
 
     @Bean

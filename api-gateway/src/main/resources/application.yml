@@ -3,10 +3,6 @@ spring:
     name: api-gateway
   security:
     oauth2:
-      resourceserver:
-        jwt:
-          jwk-set-uri: http://localhost:8090/realms/zzapkaotalk/protocol/openid-connect/certs
-          issuer-uri: http://localhost:8090/realms/zzapkaotalk
       client:
         registration:
           keycloak:
@@ -35,6 +31,7 @@ spring:
               predicates:
                 - Path=/chat-service/**
               filters:
+                - TokenRelay=
                 - RewritePath=/chat-service/(?<remaining>.*), /${remaining}
                 - name: CircuitBreaker
                   args:

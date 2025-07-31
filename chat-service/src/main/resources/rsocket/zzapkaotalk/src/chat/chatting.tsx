@@ -25,6 +25,7 @@ function RSocketChat() {
     const rsocketRef = useRef<any>(null);
 
     useEffect(() => {
+
         // RSocket 클라이언트 설정
         const client = new RSocketClient({
             serializers: {
@@ -78,7 +79,7 @@ function RSocketChat() {
                 console.log('RSocket connection closed.');
             }
         };
-    }, []); // 빈 배열을 전달하여 컴포넌트 마운트 시 한 번만 실행
+    }, []);
 
     const handleSendMessage = () => {
         if (!rsocketRef.current || !isConnected) {

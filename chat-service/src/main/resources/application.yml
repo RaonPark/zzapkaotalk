@@ -1,6 +1,12 @@
 spring:
   application:
     name: chat-service
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: http://localhost:8090/realms/zzapkaotalk/protocol/openid-connect/certs
+          issuer-uri: http://localhost:8090/realms/zzapkaotalk
   kafka:
     bootstrap-servers: localhost:10001,localhost:10002,localhost:10003
     properties:
