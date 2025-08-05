@@ -1,0 +1,43 @@
+/* src/components/Sidebar.module.css */
+.sidebar {
+    width: 250px;
+    background-color: var(--surface-dark);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid var(--primary-dark);
+}
+
+.title {
+    color: var(--text-primary);
+    margin-bottom: 20px;
+    border-bottom: 1px solid var(--primary-accent);
+    padding-bottom: 10px;
+}
+
+.userList {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.userItem {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.userItem:hover {
+    background-color: var(--primary-dark);
+}
+
+.avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    margin-right: 15px;
+    object-fit: cover;
+}

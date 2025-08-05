@@ -6,5 +6,14 @@ export default defineConfig({
   plugins: [react()],
   define: {
     'global': {},
+  },
+  server: {
+    proxy: {
+      '/checkLogin': {
+        target: 'http://localhost:8084',
+        changeOrigin: true,
+        secure: false
+      }
+    }
   }
 })

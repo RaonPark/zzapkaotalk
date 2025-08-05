@@ -24,13 +24,13 @@ class SecurityConfig(
     private val oAuth2AuthenticationSuccessHandler: OAuth2AuthenticationSuccessHandler,
     private val corsWebFilter: CorsWebFilter
 ) {
-
     @Bean
     fun securityWebFilterChain(http: ServerHttpSecurity): SecurityWebFilterChain {
         return http {
             csrf { disable() }
             cors { corsWebFilter }
             authorizeExchange {
+                authorize("/checkLogin", permitAll)
                 authorize("/login", permitAll)
                 authorize("/logout", permitAll)
                 authorize(anyExchange, authenticated)

@@ -36,6 +36,7 @@ dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-data-redis-reactive")
 	implementation("org.apache.commons:commons-pool2:2.12.1")
 	implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
+
 	implementation("org.springframework.boot:spring-boot-starter-quartz")
 	implementation("org.springframework.boot:spring-boot-starter-security")
 	implementation("org.springframework.boot:spring-boot-starter-webflux")

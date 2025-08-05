@@ -66,3 +66,24 @@ button:focus-visible {
     background-color: #f9f9f9;
   }
 }
+
+/* src/index.css */
+:root {
+  --background-dark: #121212;
+  --surface-dark: #1E1E1E;
+  --primary-dark: #2A2A2A;
+  --primary-accent: #3A3A3A;
+  --text-primary: #E0E0E0;
+  --text-secondary: #A0A0A0;
+  --accent-color: #00A8FF; /* 포인트 컬러 */
+  --font-family: 'Noto Sans KR', sans-serif; /* 구글 폰트 사용 (선택) */
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-family);
+  background-color: var(--background-dark);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}

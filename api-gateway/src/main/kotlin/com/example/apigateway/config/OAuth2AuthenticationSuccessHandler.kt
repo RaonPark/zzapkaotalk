@@ -35,7 +35,7 @@ class OAuth2AuthenticationSuccessHandler(
         val email = oidcUser.attributes["email"] as String
 
         return requestCache.getRedirectUri(webFilterExchange.exchange)
-            .defaultIfEmpty(URI.create("/"))
+            .defaultIfEmpty(URI.create("http://localhost:5173"))
             .flatMap { redirectUrl ->
                 mono(Dispatchers.IO) {
                     userRepository.findByEmail(email)
@@ -45,10 +45,10 @@ class OAuth2AuthenticationSuccessHandler(
                         .thenReturn(user)
                 }
                 .doOnSuccess { user ->
-                    log.info("Here's Redirection {}", redirectUrl)
+                    log.info("Here's Redirection {}", redirectUrl.path)
                     log.info("Successfully authenticated user {}", user)
                 }.then(
-                    RedirectServerAuthenticationSuccessHandler(redirectUrl.toString())
+                    RedirectServerAuthenticationSuccessHandler("http://localhost:5173")
                         .onAuthenticationSuccess(webFilterExchange, authentication)
                 )
             }

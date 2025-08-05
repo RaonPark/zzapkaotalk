@@ -55,6 +55,10 @@ spring:
             locator:
               enabled: true
               lower-case-service-id: true
+  rsocket:
+    server:
+      transport: websocket
+      mapping-path: /rsocket
   data:
     redis:
       port: 6379

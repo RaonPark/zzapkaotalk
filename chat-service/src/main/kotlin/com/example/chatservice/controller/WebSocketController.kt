@@ -8,14 +8,17 @@ import com.example.chatservice.reactive.entity.User
 import com.example.chatservice.service.*
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.reactor.awaitSingle
 import org.springframework.data.redis.core.ReactiveRedisOperations
 import org.springframework.messaging.handler.annotation.DestinationVariable
 import org.springframework.messaging.handler.annotation.MessageMapping
 import org.springframework.messaging.handler.annotation.Payload
 import org.springframework.messaging.rsocket.annotation.ConnectMapping
+import org.springframework.security.core.annotation.AuthenticationPrincipal
+import org.springframework.security.oauth2.core.oidc.user.OidcUser
+import org.springframework.security.oauth2.jwt.Jwt
 import org.springframework.stereotype.Controller
-import java.security.Principal
 
 @Controller
 class WebSocketController(
@@ -28,6 +31,17 @@ class WebSocketController(
 ) {
     companion object {
         val log = KotlinLogging.logger { }
+    }
+
+    @ConnectMapping("")
+    fun connectRSocket(@AuthenticationPrincipal jwt: Jwt?) {
+        log.info { "Is there a jwt? = $jwt" }
+    }
+
+    @ConnectMapping("chat.connect")
+    suspend fun connectDirect(@AuthenticationPrincipal user: OidcUser?) {
+        log.info { "Connecting to chat" }
+        log.info { "There is user = $user" }
     }
 
     @ConnectMapping("chat.direct.{userId}")
@@ -78,8 +92,10 @@ class WebSocketController(
     @MessageMapping("chat.direct.{userId}")
     suspend fun chattingDirect(
         @Payload directChatMessage: DirectChatMessageRequest,
-        @DestinationVariable("userId") userId: Long
+        @DestinationVariable("userId") userId: Long,
+        @AuthenticationPrincipal jwt: Jwt
     ) {
+        log.info { "Jwt of authentication principal: $jwt" }
         log.info { "Received direct: $directChatMessage" }
 
         // insert chat in DB

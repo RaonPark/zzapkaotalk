@@ -1,0 +1,40 @@
+/* src/components/MessageInput.module.css */
+.inputContainer {
+    display: flex;
+    padding: 20px;
+    background-color: var(--surface-dark);
+    border-top: 1px solid var(--primary-dark);
+}
+
+.input {
+    flex: 1;
+    padding: 12px 15px;
+    border: 1px solid var(--primary-accent);
+    border-radius: 20px;
+    background-color: var(--primary-dark);
+    color: var(--text-primary);
+    font-size: 16px;
+    outline: none;
+    transition: border-color 0.2s ease;
+}
+
+.input:focus {
+    border-color: var(--accent-color);
+}
+
+.sendButton {
+    margin-left: 10px;
+    padding: 12px 25px;
+    border: none;
+    border-radius: 20px;
+    background-color: var(--accent-color);
+    color: white;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: opacity 0.2s ease;
+}
+
+.sendButton:hover {
+    opacity: 0.8;
+}

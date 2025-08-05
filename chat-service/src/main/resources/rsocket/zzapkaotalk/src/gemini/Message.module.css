@@ -1,0 +1,32 @@
+/* src/components/Message.module.css */
+.message {
+    display: flex;
+    margin-bottom: 15px;
+    max-width: 60%;
+}
+
+.bubble {
+    padding: 12px 18px;
+    border-radius: 20px;
+    line-height: 1.5;
+}
+
+/* 상대방 메시지 */
+.message {
+    align-self: flex-start;
+}
+.message .bubble {
+    background-color: var(--primary-dark);
+    color: var(--text-primary);
+    border-top-left-radius: 5px;
+}
+
+/* 내가 보낸 메시지 */
+.own {
+    align-self: flex-end;
+}
+.own .bubble {
+    background-color: var(--accent-color);
+    color: #FFFFFF;
+    border-top-right-radius: 5px;
+}

@@ -1,8 +1,18 @@
 // src/App.tsx
 import React, { useState, useEffect, useRef } from 'react';
-import { RSocketClient, JsonSerializer, IdentitySerializer } from 'rsocket-core';
+import {
+    RSocketClient,
+    JsonSerializer,
+    IdentitySerializer,
+    MESSAGE_RSOCKET_ROUTING,
+    MESSAGE_RSOCKET_AUTHENTICATION,
+    encodeCompositeMetadata,
+    encodeRoute,
+    BufferEncoders,
+} from 'rsocket-core';
 import RSocketWebSocketClient from 'rsocket-websocket-client';
 import './Chatting.css'; // 스타일링 파일
+import axios from 'axios';
 
 interface ChatMessage {
     fromUserId: number;
@@ -20,12 +30,27 @@ function RSocketChat() {
     const [toUserId, setToUserId] = useState('');
     const [messageInput, setMessageInput] = useState('');
     const [isConnected, setIsConnected] = useState(false);
+    const [auth, setAuth] = useState(false);
 
     // RSocket 인스턴스를 컴포넌트의 생명주기 동안 유지하기 위해 useRef 사용
     const rsocketRef = useRef<any>(null);
 
     useEffect(() => {
+        const checkLogin = async () => {
+            await axios.get('/checkLogin')
+                .then((response) => {
+                    if(response.status == 302) {
+                        setAuth(true);
+                        console.log(response.status)
+                    }
+                });
+        }
 
+        checkLogin();
+
+        if(!auth) {
+            return;
+        }
         // RSocket 클라이언트 설정
         const client = new RSocketClient({
             serializers: {
@@ -39,8 +64,8 @@ function RSocketChat() {
                 metadataMimeType: 'message/x.rsocket.routing.v0',
             },
             transport: new RSocketWebSocketClient({
-                url: 'ws://localhost:28079/rsocket', // Spring Boot RSocket 엔드포인트
-            }),
+                url: 'ws://localhost:8079/rsocket', // Spring Boot RSocket 엔드포인트
+            }, BufferEncoders),
         });
 
         // RSocket 연결
@@ -50,17 +75,34 @@ function RSocketChat() {
                 setIsConnected(true);
                 console.log('RSocket connection established.');
 
+                socket.requestResponse({
+                    metadata: encodeCompositeMetadata([
+                        [MESSAGE_RSOCKET_AUTHENTICATION, encodeRoute('chat.connect')]
+                    ])
+                }).subscribe({
+                    onComplete: (payload) => {
+                        console.log(payload)
+                    },
+                    onError: (error) => {
+                        console.log(`connection error = ${error}`);
+                    }
+                })
+
                 // 채팅 메시지 스트림 구독 (Request-Stream)
                 socket
                     .requestStream({
-                        metadata: String.fromCharCode('chat.stream'.length) + 'chat.stream',
+                        metadata: encodeCompositeMetadata([
+                            [MESSAGE_RSOCKET_ROUTING, encodeRoute('chat.direct.stream.1')]
+                        ]),
                     })
                     .subscribe({
                         onNext: (payload) => {
                             // 새로운 메시지가 도착하면 messages 상태에 추가
                             setMessages((prevMessages) => [...prevMessages, payload.data]);
                         },
-                        onError: (error) => console.error('Stream error:', error),
+                        onError: () => {
+                            // console.log(error)
+                        },
                         onSubscribe: (subscription) => {
                             subscription.request(1000); // 받을 메시지 개수 요청
                         },
@@ -79,7 +121,7 @@ function RSocketChat() {
                 console.log('RSocket connection closed.');
             }
         };
-    }, []);
+    }, [auth]);
 
     const handleSendMessage = () => {
         if (!rsocketRef.current || !isConnected) {
@@ -101,6 +143,8 @@ function RSocketChat() {
             message: messageInput,
             timestamp: new Date().toISOString(),
         };
+
+        console.log(chatMessage)
 
         // 메시지 전송 (Fire-and-Forget)
         rsocketRef.current.fireAndForget({
