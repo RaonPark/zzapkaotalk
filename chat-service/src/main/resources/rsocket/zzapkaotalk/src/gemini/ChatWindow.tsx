@@ -4,7 +4,7 @@ import Message from './Message';
 import MessageInput from './MessageInput';
 import styles from './ChatWindow.module.css';
 import { useChatSocket } from './useChatSocket'; // 훅 임포트
-import type { MessagePayload } from './types';
+import type {DirectMessageResponse} from './types';
 
 const ChatWindow: React.FC = () => {
     // 훅을 사용하여 메시지, 전송 함수, 연결 상태를 가져옴
@@ -26,8 +26,8 @@ const ChatWindow: React.FC = () => {
             </div>
             <div className={styles.messageList}>
                 {/* 서버에서 받은 메시지 목록을 렌더링 */}
-                {messages.map((msg: MessagePayload) => (
-                    <Message key={msg.id} text={msg.text} isOwnMessage={msg.isOwnMessage} />
+                {messages.map((msg: DirectMessageResponse) => (
+                    <Message key={msg.timestamp} text={msg.message} isOwnMessage={false} />
                 ))}
             </div>
             {/* sendMessage 함수를 MessageInput에 props로 전달 */}

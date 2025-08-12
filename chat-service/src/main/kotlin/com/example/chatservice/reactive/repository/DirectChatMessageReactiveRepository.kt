@@ -6,5 +6,5 @@ import org.springframework.data.repository.kotlin.CoroutineSortingRepository
 import reactor.core.publisher.Mono
 
 interface DirectChatMessageReactiveRepository: CoroutineSortingRepository<DirectChatMessage, Long> {
-    fun findByFromUserId(fromUserId: Long): Flow<DirectChatMessage>
+    suspend fun findByFromUserId(fromUserId: Long): Flow<DirectChatMessage>
 }

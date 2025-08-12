@@ -1,22 +1,28 @@
 package com.example.apigateway.config
 
+import io.rsocket.metadata.WellKnownMimeType
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.http.codec.json.Jackson2JsonDecoder
 import org.springframework.http.codec.json.Jackson2JsonEncoder
-import org.springframework.messaging.rsocket.DefaultMetadataExtractor
-import org.springframework.messaging.rsocket.MetadataExtractor
-import org.springframework.messaging.rsocket.RSocketStrategies
+import org.springframework.messaging.rsocket.*
 import org.springframework.messaging.rsocket.annotation.support.RSocketMessageHandler
+import org.springframework.security.config.Customizer
 import org.springframework.security.config.annotation.method.configuration.EnableReactiveMethodSecurity
 import org.springframework.security.config.annotation.rsocket.EnableRSocketSecurity
 import org.springframework.security.config.annotation.rsocket.RSocketSecurity
 import org.springframework.security.messaging.handler.invocation.reactive.AuthenticationPrincipalArgumentResolver
 import org.springframework.security.oauth2.jose.jws.SignatureAlgorithm
 import org.springframework.security.oauth2.jwt.NimbusReactiveJwtDecoder
+import org.springframework.security.oauth2.server.resource.authentication.JwtReactiveAuthenticationManager
 import org.springframework.security.rsocket.core.PayloadSocketAcceptorInterceptor
+import org.springframework.security.rsocket.metadata.BearerTokenAuthenticationEncoder
+import org.springframework.util.MimeTypeUtils
 import org.springframework.web.util.pattern.PathPatternRouteMatcher
+import reactor.util.retry.Retry
+import java.net.URI
+import java.time.Duration
 
 @Configuration
 @EnableRSocketSecurity
@@ -31,12 +37,11 @@ class RSocketConfig {
             .authorizePayload { authorize ->
                 authorize
                     .setup().authenticated()
+                    .route("chat.direct").authenticated()
                     .anyRequest().authenticated()
                     .anyExchange().permitAll()
             }
-            .jwt {
-
-            }
+            .jwt(Customizer.withDefaults())
 
         return rsocket.build()
     }
@@ -56,6 +61,7 @@ class RSocketConfig {
         return RSocketStrategies.builder()
             .encoders {
                 it.add(Jackson2JsonEncoder())
+                it.add(BearerTokenAuthenticationEncoder())
             }
             .decoders {
                 it.add(Jackson2JsonDecoder())
@@ -66,9 +72,7 @@ class RSocketConfig {
 
     @Bean
     fun metadataExtractor(): MetadataExtractor {
-        return DefaultMetadataExtractor().apply {
-
-        }
+        return DefaultMetadataExtractor()
     }
 
     @Bean
@@ -76,5 +80,14 @@ class RSocketConfig {
         return NimbusReactiveJwtDecoder.withIssuerLocation(issuerUri)
             .jwsAlgorithm(SignatureAlgorithm.RS256)
             .build()
+    }
+
+    @Bean
+    suspend fun chattingServerRequester(): RSocketRequester {
+        return RSocketRequester.builder()
+            .rsocketConnector { connector -> connector.reconnect(Retry.fixedDelay(10, Duration.ofMillis(500))) }
+            .dataMimeType(MimeTypeUtils.APPLICATION_JSON)
+            .metadataMimeType(MimeTypeUtils.parseMimeType(WellKnownMimeType.MESSAGE_RSOCKET_ROUTING.string))
+            .connectWebSocketAndAwait(URI.create("ws://localhost:28079/rsocket"))
     }
 }

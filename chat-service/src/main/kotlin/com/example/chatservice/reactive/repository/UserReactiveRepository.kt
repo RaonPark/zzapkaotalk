@@ -6,4 +6,5 @@ import org.springframework.stereotype.Repository
 
 @Repository
 interface UserReactiveRepository: CoroutineCrudRepository<User, Long> {
+    suspend fun findByEmail(userEmail: String): User
 }

@@ -8,15 +8,11 @@ import com.example.chatservice.reactive.entity.User
 import com.example.chatservice.service.*
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.reactor.awaitSingle
 import org.springframework.data.redis.core.ReactiveRedisOperations
 import org.springframework.messaging.handler.annotation.DestinationVariable
 import org.springframework.messaging.handler.annotation.MessageMapping
 import org.springframework.messaging.handler.annotation.Payload
-import org.springframework.messaging.rsocket.annotation.ConnectMapping
 import org.springframework.security.core.annotation.AuthenticationPrincipal
-import org.springframework.security.oauth2.core.oidc.user.OidcUser
 import org.springframework.security.oauth2.jwt.Jwt
 import org.springframework.stereotype.Controller
 
@@ -31,31 +27,6 @@ class WebSocketController(
 ) {
     companion object {
         val log = KotlinLogging.logger { }
-    }
-
-    @ConnectMapping("")
-    fun connectRSocket(@AuthenticationPrincipal jwt: Jwt?) {
-        log.info { "Is there a jwt? = $jwt" }
-    }
-
-    @ConnectMapping("chat.connect")
-    suspend fun connectDirect(@AuthenticationPrincipal user: OidcUser?) {
-        log.info { "Connecting to chat" }
-        log.info { "There is user = $user" }
-    }
-
-    @ConnectMapping("chat.direct.{userId}")
-    suspend fun connect(@DestinationVariable userId: Long) {
-        val user = userRedisOperations.opsForValue()["user:$userId"].awaitSingle()
-
-        webSocketManager.userConnection(user.id)
-
-        log.info { "RSocket Connected user $userId" }
-    }
-
-    @ConnectMapping("chat.group.{chatroomId}")
-    suspend fun groupChatConnection() {
-
     }
 
     /**
@@ -89,13 +60,10 @@ class WebSocketController(
         return messageBroadcaster.getGroupChatStream(chatRoomId)
     }
 
-    @MessageMapping("chat.direct.{userId}")
+    @MessageMapping("chat.direct.send")
     suspend fun chattingDirect(
         @Payload directChatMessage: DirectChatMessageRequest,
-        @DestinationVariable("userId") userId: Long,
-        @AuthenticationPrincipal jwt: Jwt
     ) {
-        log.info { "Jwt of authentication principal: $jwt" }
         log.info { "Received direct: $directChatMessage" }
 
         // insert chat in DB
@@ -106,10 +74,10 @@ class WebSocketController(
         directChatMessageBroadcastService.directChatMessageBroadcast(directChatMessage)
     }
 
-    @MessageMapping("chat.direct.stream.{userId}")
-    suspend fun broadcastDirectChat(@DestinationVariable("userId") userId: Long): Flow<DirectChatMessageResponse> {
-        log.info { "subscribe stream : $userId" }
+    @MessageMapping("chat.direct.stream")
+    suspend fun broadcastDirectChat(userEmail: String): Flow<DirectChatMessageResponse> {
+        log.info { "subscribe stream : $userEmail" }
 
-        return messageBroadcaster.getDirectChatMessageStream(userId)
+        return messageBroadcaster.getPreviousDirectChatMessage(userEmail)
     }
 }

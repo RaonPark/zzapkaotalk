@@ -5,3 +5,17 @@ export interface MessagePayload {
     text: string;
     isOwnMessage: boolean; // UI에서 내가 보낸 메시지인지 구분하기 위한 플래그
 }
+
+export interface DirectMessageRequest {
+    message: string;
+    fromUserId: number;
+    toUserId: number;
+    timestamp: string;
+}
+
+export interface DirectMessageResponse {
+    message: string;
+    fromUserId: string;
+    toUserId: string;
+    timestamp: string;
+}

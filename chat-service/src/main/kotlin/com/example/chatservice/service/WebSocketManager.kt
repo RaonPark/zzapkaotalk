@@ -26,8 +26,9 @@ class WebSocketManager(
     }
 
     suspend fun userConnected(toUserId: Long): Boolean {
-        return websocketManagerRedisTemplate.opsForValue()["session:$toUserId"]
-            .awaitSingle().websocketServer == currentInstanceId
+        val user = websocketManagerRedisTemplate.opsForValue()["session:$toUserId"]
+            .awaitSingleOrNull() ?: return false
+        return user.websocketServer == currentInstanceId
     }
 
     suspend fun userConnection(userId: Long) {

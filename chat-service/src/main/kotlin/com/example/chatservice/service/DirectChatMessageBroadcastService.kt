@@ -22,7 +22,7 @@ class DirectChatMessageBroadcastService(
         val log = KotlinLogging.logger { }
     }
 
-    fun directChatMessageBroadcast(directChatMessageRequest: DirectChatMessageRequest) {
+    suspend fun directChatMessageBroadcast(directChatMessageRequest: DirectChatMessageRequest) {
         val avro = convertDtoToAvro(directChatMessageRequest)
 
         directChatMessageBroadcastKafkaTemplate.executeInTransaction {

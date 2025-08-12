@@ -48,6 +48,7 @@ spring:
           enabled: true
   rsocket:
     server:
+      port: 28079
       transport: websocket
       mapping-path: /rsocket
 eureka:
@@ -59,3 +60,8 @@ eureka:
     register-with-eureka: true
 server:
   port: 8079
+
+logging:
+  level:
+    io.rsocket: TRACE
+    org.springframework.messaging.rsocket: TRACE

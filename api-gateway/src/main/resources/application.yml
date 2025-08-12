@@ -50,6 +50,12 @@ spring:
               filters:
                 - RewritePath=/auth/user/(?<remaining>.*), /${remaining}
                 - TokenRelay=
+            - id: rsocket-service
+              uri: lb:ws://CHAT-SERVICE
+              predicates:
+                - Path=/rsocket
+              filters:
+                - TokenRelay=
 
           discovery:
             locator:
@@ -102,3 +108,6 @@ logging:
   level:
     org.springframework.cloud.loadbalancer: DEBUG
 #    org.springframework.cloud.gateway: TRACE
+    org.springframework.messaging.rsocket: TRACE
+    org.springframework.security.rsocket: TRACE
+    io.rsocket: TRACE
