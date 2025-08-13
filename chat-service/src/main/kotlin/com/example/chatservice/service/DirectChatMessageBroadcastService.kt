@@ -26,16 +26,19 @@ class DirectChatMessageBroadcastService(
         val avro = convertDtoToAvro(directChatMessageRequest)
 
         directChatMessageBroadcastKafkaTemplate.executeInTransaction {
-            it.send("direct-chat-broadcast", avro.toUserId, avro)
+            it.send("direct-chat-broadcast", avro.fromUserId, avro)
         }
     }
 
-    private fun convertDtoToAvro(dto: DirectChatMessageRequest): DirectChatMessageBroadcast {
+    private suspend fun convertDtoToAvro(dto: DirectChatMessageRequest): DirectChatMessageBroadcast {
+        val fromUserId = redisService.getUserFromCacheIfMissFromDB(dto.fromUserEmail).id
+        val toUserId = redisService.getUserFromCacheIfMissFromDB(dto.toUserEmail).id
+
         return DirectChatMessageBroadcast.newBuilder()
             .setMessage(dto.message)
             .setCreatedTime(dto.timestamp.toInstant(ZoneOffset.of("+9")))
-            .setToUserId(dto.toUserId)
-            .setFromUserId(dto.fromUserId)
+            .setToUserId(toUserId)
+            .setFromUserId(fromUserId)
             .build()
     }
 

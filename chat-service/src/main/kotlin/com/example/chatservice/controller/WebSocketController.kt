@@ -3,6 +3,7 @@ package com.example.chatservice.controller
 import com.chatservice.GroupChatMessageBroadcast
 import com.example.chatservice.dto.DirectChatMessageRequest
 import com.example.chatservice.dto.DirectChatMessageResponse
+import com.example.chatservice.dto.DirectChatStreamRequest
 import com.example.chatservice.dto.GroupChatMessageRequest
 import com.example.chatservice.reactive.entity.User
 import com.example.chatservice.service.*
@@ -74,10 +75,17 @@ class WebSocketController(
         directChatMessageBroadcastService.directChatMessageBroadcast(directChatMessage)
     }
 
-    @MessageMapping("chat.direct.stream")
-    suspend fun broadcastDirectChat(userEmail: String): Flow<DirectChatMessageResponse> {
-        log.info { "subscribe stream : $userEmail" }
+    @MessageMapping("chat.direct.previous")
+    suspend fun broadcastDirectChat(directChatStreamRequest: DirectChatStreamRequest): Flow<DirectChatMessageResponse> {
+        log.info { "subscribe stream : ${directChatStreamRequest.fromUserEmail}" }
 
-        return messageBroadcaster.getPreviousDirectChatMessage(userEmail)
+        return messageBroadcaster.getPreviousDirectChatMessage(directChatStreamRequest.fromUserEmail, directChatStreamRequest.toUserEmail)
+    }
+
+    @MessageMapping("chat.direct.stream")
+    suspend fun directMessageStream(directChatStreamRequest: DirectChatStreamRequest): Flow<DirectChatMessageResponse> {
+        log.info { "subscribe message: ${directChatStreamRequest.toUserEmail}" }
+
+        return messageBroadcaster.getDirectChatMessageStream(directChatStreamRequest.fromUserEmail)
     }
 }

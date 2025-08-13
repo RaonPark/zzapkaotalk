@@ -6,6 +6,7 @@ import com.example.chatservice.reactive.entity.DirectChatMessage
 import com.example.chatservice.reactive.entity.GroupChatMessage
 import com.example.chatservice.reactive.repository.ChatroomReactiveRepository
 import com.example.chatservice.reactive.repository.ChatroomUsersReactiveRepository
+import com.example.chatservice.reactive.repository.DirectChatMessageReactiveRepository
 import com.example.chatservice.reactive.repository.GroupChatMessageReactiveRepository
 import com.example.chatservice.reactive.repository.UserReactiveRepository
 import com.example.chatservice.redis.service.RedisService
@@ -14,6 +15,8 @@ import com.example.chatservice.supports.SnowflakeIdGenerator
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.asFlow
+import kotlinx.coroutines.flow.flatMapConcat
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.reactor.awaitSingle
@@ -30,7 +33,8 @@ class ChatService(
     private val userRepository: UserReactiveRepository,
     private val chatRoomRepository: ChatroomReactiveRepository,
     private val r2dbcTemplate: R2dbcEntityTemplate,
-    private val redisService: RedisService
+    private val redisService: RedisService,
+    private val directChatMessageRepository: DirectChatMessageReactiveRepository,
 ) {
     companion object {
         val log = KotlinLogging.logger { }
@@ -92,8 +96,8 @@ class ChatService(
             checked = false,
             createdAt = directChatMessageRequest.timestamp,
             message = directChatMessageRequest.message,
-            fromUserId = directChatMessageRequest.fromUserId,
-            toUserId = directChatMessageRequest.toUserId,
+            fromUserId = redisService.getUserFromCacheIfMissFromDB(userEmail = directChatMessageRequest.fromUserEmail).id,
+            toUserId = redisService.getUserFromCacheIfMissFromDB(userEmail = directChatMessageRequest.toUserEmail).id,
             lastModifiedAt = directChatMessageRequest.timestamp,
         )
 
@@ -109,5 +113,18 @@ class ChatService(
             message = savedChat.message,
             createdTime = savedChat.createdAt,
         )
+    }
+
+    suspend fun getChatUsers(userEmail: String): Flow<ChatUserResponse> {
+        log.info { "get chat users: $userEmail" }
+        val userId = redisService.getUserFromCacheIfMissFromDB(userEmail).id
+        return directChatMessageRepository.findDirectChatBuddy(userId).map { chatUser ->
+            log.info { "chat user: $chatUser" }
+            ChatUserResponse(
+                nickname = chatUser.nickname,
+                profileImage = chatUser.profileImage,
+                userEmail = chatUser.email
+            )
+        }
     }
 }

@@ -31,7 +31,6 @@ spring:
               predicates:
                 - Path=/chat-service/**
               filters:
-                - TokenRelay=
                 - RewritePath=/chat-service/(?<remaining>.*), /${remaining}
                 - name: CircuitBreaker
                   args:
@@ -43,18 +42,13 @@ spring:
                     redis-rate-limiter.burstCapacity: 100
                     redis-rate-limiter.requestedTokens: 1
                     key-resolver: "#{@userKeyResolver}"
+                - TokenRelay=
             - id: user-service
               uri: lb://USER-SERVICE
               predicates:
                 - Path=/auth/user/**
               filters:
                 - RewritePath=/auth/user/(?<remaining>.*), /${remaining}
-                - TokenRelay=
-            - id: rsocket-service
-              uri: lb:ws://CHAT-SERVICE
-              predicates:
-                - Path=/rsocket
-              filters:
                 - TokenRelay=
 
           discovery:
@@ -107,7 +101,8 @@ server:
 logging:
   level:
     org.springframework.cloud.loadbalancer: DEBUG
-#    org.springframework.cloud.gateway: TRACE
-    org.springframework.messaging.rsocket: TRACE
-    org.springframework.security.rsocket: TRACE
-    io.rsocket: TRACE
+    org.springframework.cloud.gateway: TRACE
+    org.springframework.security: TRACE
+#    org.springframework.messaging.rsocket: TRACE
+#    org.springframework.security.rsocket: TRACE
+#    io.rsocket: TRACE

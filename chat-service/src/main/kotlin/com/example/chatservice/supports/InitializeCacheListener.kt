@@ -29,7 +29,7 @@ class InitializeCacheListener(
 
         log.info { "Loading cache for user $users" }
 
-        val userCacheMap = users.associateBy { "user:${it.id}" }
+        val userCacheMap = users.associateBy { "user:${it.email}" }
 
         userRedisOperations.opsForValue()
             .multiSet(userCacheMap)

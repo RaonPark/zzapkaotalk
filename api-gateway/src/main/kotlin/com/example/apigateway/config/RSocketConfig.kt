@@ -82,12 +82,4 @@ class RSocketConfig {
             .build()
     }
 
-    @Bean
-    suspend fun chattingServerRequester(): RSocketRequester {
-        return RSocketRequester.builder()
-            .rsocketConnector { connector -> connector.reconnect(Retry.fixedDelay(10, Duration.ofMillis(500))) }
-            .dataMimeType(MimeTypeUtils.APPLICATION_JSON)
-            .metadataMimeType(MimeTypeUtils.parseMimeType(WellKnownMimeType.MESSAGE_RSOCKET_ROUTING.string))
-            .connectWebSocketAndAwait(URI.create("ws://localhost:28079/rsocket"))
-    }
 }

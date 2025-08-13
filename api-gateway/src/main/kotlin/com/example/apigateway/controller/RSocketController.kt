@@ -2,6 +2,7 @@ package com.example.apigateway.controller
 
 import com.example.apigateway.entity.DirectChatMessageRequest
 import com.example.apigateway.entity.DirectChatMessageResponse
+import com.example.apigateway.entity.DirectChatStreamRequest
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.rsocket.metadata.WellKnownMimeType
 import kotlinx.coroutines.flow.Flow
@@ -30,7 +31,7 @@ import java.time.Duration
 
 @Controller
 class RSocketController(
-    private val chattingServerRequester: RSocketRequester
+    private val chattingServerRequester: RSocketRequester.Builder
 ) {
     companion object {
         private val log = KotlinLogging.logger {}
@@ -49,33 +50,22 @@ class RSocketController(
 
     data class Response(val message: String)
 
-    @MessageMapping("chat.direct.stream")
-    suspend fun getPreviousMessages(@AuthenticationPrincipal jwt: Jwt): Flow<DirectChatMessageResponse> {
+    @MessageMapping("chat.direct.previous")
+    suspend fun getPreviousMessages(@AuthenticationPrincipal jwt: Jwt, @Payload toUserEmail: String): Flow<DirectChatMessageResponse> {
         val userEmail = jwt.claims["email"] ?: TODO("Throw Keycloak Exception")
 
         log.info { "user email: $userEmail" }
 
         return chattingServerRequester
-            .route("chat.direct.stream")
-            .data(userEmail)
+            .rsocketConnector { connector -> connector.reconnect(Retry.fixedDelay(10, Duration.ofMillis(500))) }
+            .dataMimeType(MimeTypeUtils.APPLICATION_JSON)
+            .metadataMimeType(MimeTypeUtils.parseMimeType(WellKnownMimeType.MESSAGE_RSOCKET_ROUTING.string))
+            .connectWebSocketAndAwait(URI.create("ws://localhost:28079/rsocket"))
+            .route("chat.direct.previous")
+            .data(DirectChatStreamRequest(
+                userEmail as String, toUserEmail
+            ))
             .retrieveFlow<DirectChatMessageResponse>()
-    }
-
-    @MessageMapping("chat.chat.direct")
-    suspend fun directMessage(@AuthenticationPrincipal jwt: Jwt, rSocketRequester: RSocketRequester, message: DirectChatMessageRequest): Flow<Response> {
-        log.info { "direct message produced by ${jwt.claims["email"]}" }
-        log.info { "rSocket request received" }
-
-        rSocketRequester
-            .route("chat.direct.${jwt.claims["email"]}")
-            .data(message)
-            .send()
-            .awaitSingle()
-
-        return flow {
-            emit(Response("hello world"))
-            emit(Response("Next word"))
-        }
     }
 
     @MessageMapping("chat.direct.send")
@@ -89,9 +79,34 @@ class RSocketController(
         val userEmail = jwt.claims["email"]
 
         chattingServerRequester
+            .rsocketConnector { connector -> connector.reconnect(Retry.fixedDelay(10, Duration.ofMillis(500))) }
+            .dataMimeType(MimeTypeUtils.APPLICATION_JSON)
+            .metadataMimeType(MimeTypeUtils.parseMimeType(WellKnownMimeType.MESSAGE_RSOCKET_ROUTING.string))
+            .connectWebSocketAndAwait(URI.create("ws://localhost:28079/rsocket"))
             .route("chat.direct.send")
             .data(message)
             .send()
             .awaitSingleOrNull()
+    }
+
+    @MessageMapping("chat.direct.stream")
+    suspend fun directMessageStream(
+        @AuthenticationPrincipal jwt: Jwt,
+        @DestinationVariable toUserEmail: String
+    ): Flow<DirectChatMessageResponse> {
+        log.info { "subscribe message: $toUserEmail" }
+        log.info { "from : ${jwt.claims["email"]}"}
+
+        return chattingServerRequester
+            .rsocketConnector { connector -> connector.reconnect(Retry.fixedDelay(10, Duration.ofMillis(500))) }
+            .dataMimeType(MimeTypeUtils.APPLICATION_JSON)
+            .metadataMimeType(MimeTypeUtils.parseMimeType(WellKnownMimeType.MESSAGE_RSOCKET_ROUTING.string))
+            .connectWebSocketAndAwait(URI.create("ws://localhost:28079/rsocket"))
+            .route("chat.direct.stream")
+            .data(DirectChatStreamRequest(
+                fromUserEmail = jwt.claims["email"] as String,
+                toUserEmail = toUserEmail
+            ))
+            .retrieveFlow<DirectChatMessageResponse>()
     }
 }

@@ -6,6 +6,7 @@ import com.example.chatservice.converter.DirectChatMessageConverter
 import com.example.chatservice.dto.DirectChatMessageResponse
 import com.example.chatservice.reactive.repository.DirectChatMessageReactiveRepository
 import com.example.chatservice.reactive.repository.UserReactiveRepository
+import com.example.chatservice.redis.service.RedisService
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.Flow
@@ -19,7 +20,7 @@ import java.util.concurrent.ConcurrentHashMap
 
 @Service
 class MessageBroadcaster(
-    private val userRepository: UserReactiveRepository,
+    private val redisService: RedisService,
     private val directChatMessageReactiveRepository: DirectChatMessageReactiveRepository,
     private val directChatMessageConverter: DirectChatMessageConverter
 ) {
@@ -30,7 +31,7 @@ class MessageBroadcaster(
     }
 
     suspend fun getDirectChatMessageStream(userEmail: String): Flow<DirectChatMessageResponse> {
-        val userId = userRepository.findByEmail(userEmail).id
+        val userId = redisService.getUserFromCacheIfMissFromDB(userEmail).id
         return directChatFlow.computeIfAbsent(userId) {
             MutableSharedFlow(
                 replay = 0,
@@ -40,9 +41,10 @@ class MessageBroadcaster(
         }
     }
 
-    suspend fun getPreviousDirectChatMessage(userEmail: String): Flow<DirectChatMessageResponse> {
-        val userId = userRepository.findByEmail(userEmail).id
-        return directChatMessageReactiveRepository.findByFromUserId(userId)
+    suspend fun getPreviousDirectChatMessage(userEmail: String, toUserEmail: String): Flow<DirectChatMessageResponse> {
+        val fromUser = redisService.getUserFromCacheIfMissFromDB(userEmail)
+        val toUser = redisService.getUserFromCacheIfMissFromDB(toUserEmail)
+        return directChatMessageReactiveRepository.findByFromUserIdAndToUserId(fromUserId = fromUser.id, toUserId = toUser.id)
             .map { directChatMessage ->
                 directChatMessageConverter.modelToResponse(directChatMessage)
             }

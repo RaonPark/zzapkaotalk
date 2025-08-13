@@ -9,11 +9,16 @@ export default defineConfig({
   },
   server: {
     proxy: {
-      '/checkLogin': {
-        target: 'http://localhost:8084',
-        changeOrigin: true,
-        secure: false
-      }
+        '/checkLogin': {
+            target: 'http://localhost:8084',
+            changeOrigin: true,
+            secure: false
+        },
+        '/chat-service': {
+            target: 'http://localhost:8084',
+            changeOrigin: true,
+            secure: false,
+        }
     }
   }
 })

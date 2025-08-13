@@ -63,5 +63,7 @@ server:
 
 logging:
   level:
-    io.rsocket: TRACE
-    org.springframework.messaging.rsocket: TRACE
+    org.springframework.cloud.gateway: TRACE
+    org.springframework.security: TRACE
+#    io.rsocket: TRACE
+#    org.springframework.messaging.rsocket: TRACE

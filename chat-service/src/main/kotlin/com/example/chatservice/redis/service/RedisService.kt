@@ -15,9 +15,9 @@ class RedisService(
     private val userRedisOperations: ReactiveRedisOperations<String, User>,
     private val userRepository: UserReactiveRepository
 ) {
-    suspend fun getUserFromCacheIfMissFromDB(userId: Long): User {
-        return userRedisOperations.opsForValue().get("user:$userId").awaitSingleOrNull()
-            ?: userRepository.findById(userId) ?: throw UserNotFoundException(userId)
+    suspend fun getUserFromCacheIfMissFromDB(userEmail: String): User {
+        return userRedisOperations.opsForValue().get("user:$userEmail").awaitSingleOrNull()
+            ?: userRepository.findByEmail(userEmail)
     }
 
     suspend fun getUsersFromCacheIfMissFromDB(userIds: List<Long>): Map<Long, User> {

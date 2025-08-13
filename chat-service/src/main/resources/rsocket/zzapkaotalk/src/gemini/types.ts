@@ -8,8 +8,8 @@ export interface MessagePayload {
 
 export interface DirectMessageRequest {
     message: string;
-    fromUserId: number;
-    toUserId: number;
+    fromUserEmail: string;
+    toUserEmail: string;
     timestamp: string;
 }
 
@@ -18,4 +18,10 @@ export interface DirectMessageResponse {
     fromUserId: string;
     toUserId: string;
     timestamp: string;
+}
+
+export interface ChatUserResponse {
+    userEmail: string;
+    nickname: string;
+    profileImage: string;
 }

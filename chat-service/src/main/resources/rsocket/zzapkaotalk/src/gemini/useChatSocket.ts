@@ -89,8 +89,9 @@ export const useChatSocket = (username: string) => {
                 rsocketRef.current = socket;
 
                 socket.requestStream({
+                    data: Buffer.from("tom@gmail.com"),
                     metadata: encodeCompositeMetadata([
-                        [MESSAGE_RSOCKET_ROUTING, encodeRoute('chat.direct.stream')],
+                        [MESSAGE_RSOCKET_ROUTING, encodeRoute('chat.direct.previous')],
                         [MESSAGE_RSOCKET_AUTHENTICATION, encodeBearerAuthMetadata(jwt)]
                     ])
                 }).subscribe({
@@ -108,10 +109,10 @@ export const useChatSocket = (username: string) => {
                             window.location.href = 'http://localhost:8084/login'
                         }
                     },
-                    onSubscribe: (sub) => {
-                        sub.request(100);
+                    onSubscribe: (subscription) => {
+                        subscription.request(1000);
                     }
-                })
+                });
             },
             onError: (e) => {
                 console.log(e);
@@ -124,11 +125,20 @@ export const useChatSocket = (username: string) => {
         if (!rsocketRef.current || text.trim() === '') return;
 
         const messageToSend: DirectMessageRequest = {
-            fromUserId: 1,
-            toUserId: 2,
+            fromUserEmail: "raonpark@naver.com",
+            toUserEmail: "tom@gmail.com",
             message: text,
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
         }
+
+        const message: DirectMessageResponse = {
+            fromUserId: "raonpark@naver.com",
+            toUserId: "tom@gmail.com",
+            message: text,
+            timestamp: new Date().toISOString(),
+        }
+
+        setMessages(prev => [...prev, {...message}]);
 
         console.log(messageToSend)
 

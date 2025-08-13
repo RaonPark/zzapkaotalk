@@ -23,6 +23,7 @@ class SecurityConfig {
            csrf { disable() }
            cors { disable() }
            authorizeExchange {
+//               authorize("/chat/test", permitAll)
                authorize(anyExchange, authenticated)
            }
            sessionManagement {
