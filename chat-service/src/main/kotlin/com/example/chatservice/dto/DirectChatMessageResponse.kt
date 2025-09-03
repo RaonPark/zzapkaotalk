@@ -3,8 +3,8 @@ package com.example.chatservice.dto
 import java.time.LocalDateTime
 
 data class DirectChatMessageResponse(
-    var fromUserId: Long,
-    var toUserId: Long,
+    var fromUserEmail: String?,
+    var toUserEmail: String?,
     var message: String,
     var createdTime: LocalDateTime,
 )

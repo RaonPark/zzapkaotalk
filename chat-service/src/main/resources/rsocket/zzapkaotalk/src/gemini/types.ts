@@ -15,13 +15,34 @@ export interface DirectMessageRequest {
 
 export interface DirectMessageResponse {
     message: string;
-    fromUserId: string;
-    toUserId: string;
+    fromUserEmail: string;
+    toUserEmail: string;
     timestamp: string;
+}
+
+export interface DirectMessagePayload extends DirectMessageResponse {
+    isOwnMessage: boolean;
 }
 
 export interface ChatUserResponse {
     userEmail: string;
     nickname: string;
     profileImage: string;
+}
+
+export interface Me {
+    email: string;
+    nickname: string;
+    profileImage: string;
+    lastSeen: string;
+}
+
+export interface DirectChatStreamRequest {
+    fromUserEmail: string;
+    toUserEmail: string;
+}
+
+export interface DirectChatSendResponse {
+    status: string;
+    timestamp: string;
 }

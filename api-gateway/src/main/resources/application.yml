@@ -55,6 +55,8 @@ spring:
             locator:
               enabled: true
               lower-case-service-id: true
+          default-filters:
+            - TokenRelay=
   rsocket:
     server:
       transport: websocket
@@ -100,9 +102,11 @@ server:
 
 logging:
   level:
-    org.springframework.cloud.loadbalancer: DEBUG
+#    org.springframework.cloud.loadbalancer: DEBUG
     org.springframework.cloud.gateway: TRACE
     org.springframework.security: TRACE
+#    reactor.netty.http.client: TRACE
+#    org.springframework.cloud.gateway.filter.TokenRelayGatewayFilterFactory: TRACE
 #    org.springframework.messaging.rsocket: TRACE
 #    org.springframework.security.rsocket: TRACE
 #    io.rsocket: TRACE

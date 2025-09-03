@@ -6,6 +6,7 @@ import io.confluent.kafka.serializers.KafkaAvroSerializer
 import io.confluent.kafka.serializers.KafkaAvroSerializerConfig
 import org.apache.kafka.clients.producer.ProducerConfig
 import org.apache.kafka.common.serialization.LongSerializer
+import org.apache.kafka.common.serialization.StringSerializer
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -50,12 +51,12 @@ class KafkaProducerConfig {
     }
 
     @Bean
-    fun directChatMessageBroadcastProducerFactory(): ProducerFactory<Long, DirectChatMessageBroadcast> {
+    fun directChatMessageBroadcastProducerFactory(): ProducerFactory<String, DirectChatMessageBroadcast> {
         val config = mutableMapOf<String, Any>(
             ProducerConfig.BOOTSTRAP_SERVERS_CONFIG to bootstrapServers,
             ProducerConfig.ACKS_CONFIG to "all",
             ProducerConfig.RETRIES_CONFIG to 10,
-            ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG to LongSerializer::class.java,
+            ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG to StringSerializer::class.java,
             ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG to KafkaAvroSerializer::class.java,
             ProducerConfig.TRANSACTIONAL_ID_CONFIG to "chat-message-broadcast",
             ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG to "true",
@@ -65,14 +66,14 @@ class KafkaProducerConfig {
             KafkaAvroSerializerConfig.SCHEMA_REGISTRY_URL_CONFIG to schemaRegistryUrl,
         )
 
-        val producerFactory = DefaultKafkaProducerFactory<Long, DirectChatMessageBroadcast>(config)
+        val producerFactory = DefaultKafkaProducerFactory<String, DirectChatMessageBroadcast>(config)
         producerFactory.setTransactionIdSuffixStrategy(DefaultTransactionIdSuffixStrategy(5))
 
         return producerFactory
     }
 
     @Bean
-    fun directChatMessageBroadcastKafkaTemplate(): KafkaTemplate<Long, DirectChatMessageBroadcast> {
+    fun directChatMessageBroadcastKafkaTemplate(): KafkaTemplate<String, DirectChatMessageBroadcast> {
         return KafkaTemplate(directChatMessageBroadcastProducerFactory())
     }
 }

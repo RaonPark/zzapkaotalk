@@ -10,6 +10,7 @@ import org.springframework.security.config.web.server.invoke
 import org.springframework.security.oauth2.jose.jws.SignatureAlgorithm
 import org.springframework.security.oauth2.jwt.NimbusReactiveJwtDecoder
 import org.springframework.security.web.server.SecurityWebFilterChain
+import org.springframework.security.web.server.context.WebSessionServerSecurityContextRepository
 
 @Configuration
 @EnableWebFluxSecurity
@@ -23,7 +24,6 @@ class SecurityConfig {
            csrf { disable() }
            cors { disable() }
            authorizeExchange {
-//               authorize("/chat/test", permitAll)
                authorize(anyExchange, authenticated)
            }
            sessionManagement {

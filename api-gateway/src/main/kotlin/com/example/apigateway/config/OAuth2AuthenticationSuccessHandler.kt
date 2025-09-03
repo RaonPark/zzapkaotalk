@@ -7,6 +7,7 @@ import kotlinx.coroutines.reactor.mono
 import org.slf4j.LoggerFactory
 import org.springframework.data.redis.core.ReactiveRedisOperations
 import org.springframework.security.core.Authentication
+import org.springframework.security.core.context.ReactiveSecurityContextHolder
 import org.springframework.security.oauth2.core.oidc.user.OidcUser
 import org.springframework.security.web.server.WebFilterExchange
 import org.springframework.security.web.server.authentication.RedirectServerAuthenticationSuccessHandler
@@ -30,7 +31,6 @@ class OAuth2AuthenticationSuccessHandler(
         webFilterExchange: WebFilterExchange,
         authentication: Authentication
     ): Mono<Void> {
-//        val referer = webFilterExchange.exchange.request.headers["Referer"] ?: throw RuntimeException("No Referer Found")
         val oidcUser = authentication.principal as OidcUser
         val email = oidcUser.attributes["email"] as String
 

@@ -16,7 +16,9 @@ import org.mapstruct.ReportingPolicy
 )
 interface DirectChatMessageConverter {
     @Mappings(
-        Mapping(target = "createdTime", source = "createdAt")
+        Mapping(target = "createdTime", source = "createdAt"),
+        Mapping(target = "fromUserEmail", ignore = true),
+        Mapping(target = "toUserEmail", ignore = true),
     )
     fun modelToResponse(directChatMessage: DirectChatMessage): DirectChatMessageResponse
 }

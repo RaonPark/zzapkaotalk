@@ -11,12 +11,14 @@ import kotlinx.coroutines.reactor.awaitSingle
 import kotlinx.coroutines.reactor.awaitSingleOrNull
 import kotlinx.coroutines.reactor.mono
 import org.springframework.beans.factory.annotation.Qualifier
+import org.springframework.http.HttpStatus
 import org.springframework.messaging.handler.annotation.DestinationVariable
 import org.springframework.messaging.handler.annotation.MessageMapping
 import org.springframework.messaging.handler.annotation.Payload
 import org.springframework.messaging.rsocket.RSocketRequester
 import org.springframework.messaging.rsocket.annotation.ConnectMapping
 import org.springframework.messaging.rsocket.connectWebSocketAndAwait
+import org.springframework.messaging.rsocket.retrieveAndAwait
 import org.springframework.messaging.rsocket.retrieveFlow
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.security.oauth2.jwt.Jwt
@@ -68,25 +70,35 @@ class RSocketController(
             .retrieveFlow<DirectChatMessageResponse>()
     }
 
+    data class DirectChatSendResponse(
+        val status: HttpStatus,
+        val timestamp: String
+    )
+
     @MessageMapping("chat.direct.send")
     suspend fun directMessageSend(
         @AuthenticationPrincipal jwt: Jwt,
         @Payload message: DirectChatMessageRequest
-    ) {
+    ): DirectChatSendResponse {
         log.info { "fire and forget message: $message" }
         log.info { "from : ${jwt.claims["email"]}"}
 
         val userEmail = jwt.claims["email"]
 
-        chattingServerRequester
+        message.fromUserEmail = userEmail as String
+
+        val response = chattingServerRequester
             .rsocketConnector { connector -> connector.reconnect(Retry.fixedDelay(10, Duration.ofMillis(500))) }
             .dataMimeType(MimeTypeUtils.APPLICATION_JSON)
             .metadataMimeType(MimeTypeUtils.parseMimeType(WellKnownMimeType.MESSAGE_RSOCKET_ROUTING.string))
             .connectWebSocketAndAwait(URI.create("ws://localhost:28079/rsocket"))
             .route("chat.direct.send")
             .data(message)
-            .send()
-            .awaitSingleOrNull()
+            .retrieveAndAwait<DirectChatSendResponse>()
+
+        log.info { "response from request-response : $response" }
+
+        return response
     }
 
     @MessageMapping("chat.direct.stream")

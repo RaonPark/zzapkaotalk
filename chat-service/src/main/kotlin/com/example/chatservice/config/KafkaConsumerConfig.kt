@@ -6,6 +6,7 @@ import io.confluent.kafka.serializers.KafkaAvroDeserializer
 import io.confluent.kafka.serializers.KafkaAvroDeserializerConfig
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.common.serialization.LongDeserializer
+import org.apache.kafka.common.serialization.StringDeserializer
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -50,13 +51,13 @@ class KafkaConsumerConfig {
     }
 
     @Bean
-    fun directChatMessageBroadcastConsumerFactory(): ConsumerFactory<Long, DirectChatMessageBroadcast> {
+    fun directChatMessageBroadcastConsumerFactory(): ConsumerFactory<String, DirectChatMessageBroadcast> {
         val configMap = mapOf(
             ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG to bootstrapServers,
             ConsumerConfig.GROUP_ID_CONFIG to "direct-chat-message-broadcast",
             ConsumerConfig.AUTO_OFFSET_RESET_CONFIG to "earliest",
             ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG to false,
-            ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG to LongDeserializer::class.java,
+            ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG to StringDeserializer::class.java,
             ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG to KafkaAvroDeserializer::class.java,
             ConsumerConfig.ALLOW_AUTO_CREATE_TOPICS_CONFIG to "false",
             ConsumerConfig.ISOLATION_LEVEL_CONFIG to "read_committed",
@@ -68,8 +69,8 @@ class KafkaConsumerConfig {
     }
 
     @Bean
-    fun directChatMessageBroadcastKafkaListenerContainerFactory(): ConcurrentKafkaListenerContainerFactory<Long, DirectChatMessageBroadcast> {
-        val factory = ConcurrentKafkaListenerContainerFactory<Long, DirectChatMessageBroadcast>()
+    fun directChatMessageBroadcastKafkaListenerContainerFactory(): ConcurrentKafkaListenerContainerFactory<String, DirectChatMessageBroadcast> {
+        val factory = ConcurrentKafkaListenerContainerFactory<String, DirectChatMessageBroadcast>()
         factory.consumerFactory = directChatMessageBroadcastConsumerFactory()
         factory.containerProperties.ackMode = ContainerProperties.AckMode.MANUAL
         factory.containerProperties.eosMode = ContainerProperties.EOSMode.V2

@@ -4,6 +4,7 @@ import com.example.userservice.dto.LoginRequest
 import com.example.userservice.dto.LoginResponse
 import com.example.userservice.dto.RegisterRequest
 import com.example.userservice.dto.RegisterResponse
+import com.example.userservice.entity.Me
 import com.example.userservice.service.UserService
 import kotlinx.coroutines.reactor.awaitSingle
 import org.slf4j.LoggerFactory
@@ -54,5 +55,11 @@ class UserController(
         log.info("From Header Authorization = ${serverWebExchange.request.headers["Authorization"]}")
 
         return "isTokenRelay = ${jwt.issuer}"
+    }
+
+    @GetMapping("/me")
+    suspend fun me(@AuthenticationPrincipal jwt: Jwt): Me {
+        log.info("me() User found = ${jwt.claims["email"]}")
+        return userService.getMe(jwt)
     }
 }

@@ -13,6 +13,7 @@ import org.springframework.security.oauth2.client.web.DefaultReactiveOAuth2Autho
 import org.springframework.security.oauth2.client.web.server.ServerOAuth2AuthorizedClientRepository
 import org.springframework.security.web.server.SecurityWebFilterChain
 import org.springframework.security.web.server.authentication.logout.ServerLogoutSuccessHandler
+import org.springframework.security.web.server.context.WebSessionServerSecurityContextRepository
 import org.springframework.web.cors.reactive.CorsWebFilter
 import reactor.core.publisher.Mono
 import java.time.Duration
@@ -35,6 +36,7 @@ class SecurityConfig(
                 authorize("/logout", permitAll)
                 authorize(anyExchange, authenticated)
             }
+            securityContextRepository = WebSessionServerSecurityContextRepository()
             oauth2Login {
                 authenticationSuccessHandler = oAuth2AuthenticationSuccessHandler
             }

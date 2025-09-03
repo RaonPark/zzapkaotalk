@@ -4,6 +4,7 @@ import com.example.userservice.dto.LoginRequest
 import com.example.userservice.dto.LoginResponse
 import com.example.userservice.dto.RegisterRequest
 import com.example.userservice.dto.RegisterResponse
+import com.example.userservice.entity.Me
 import com.example.userservice.entity.User
 import com.example.userservice.entity.keycloak.KeycloakCredential
 import com.example.userservice.entity.keycloak.KeycloakUser
@@ -14,6 +15,7 @@ import com.example.userservice.support.MachineIdGenerator
 import com.example.userservice.support.SnowflakeIdGenerator
 import com.fasterxml.jackson.annotation.JsonProperty
 import kotlinx.coroutines.reactor.awaitSingle
+import kotlinx.coroutines.reactor.awaitSingleOrNull
 import org.slf4j.LoggerFactory
 import org.springframework.data.r2dbc.core.R2dbcEntityTemplate
 import org.springframework.data.redis.core.ReactiveRedisOperations
@@ -154,5 +156,17 @@ class UserService(
 
     suspend fun requestEmailVerification(id: Long) {
 
+    }
+
+    suspend fun getMe(jwt: Jwt): Me {
+        return userRedisOperations.opsForValue().get("user:${jwt.claims["email"]}").awaitSingleOrNull()
+            ?.let { user ->
+                Me(
+                    nickname = user.nickname,
+                    profileImage = user.profileImage,
+                    email = user.email,
+                    lastSeen = LocalDateTime.now().toString(),
+                )
+            } ?: throw KeycloakException("User not found")
     }
 }

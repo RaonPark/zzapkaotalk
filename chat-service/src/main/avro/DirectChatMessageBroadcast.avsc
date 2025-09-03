@@ -4,12 +4,14 @@
   "type": "record",
   "fields": [
     {
-      "name": "fromUserId",
-      "type": "long"
+      "name": "fromUserEmail",
+      "type": "string",
+      "default": "anonymous"
     },
     {
-      "name": "toUserId",
-      "type": "long"
+      "name": "toUserEmail",
+      "type": "string",
+      "default": "anonymous"
     },
     {
       "name": "message",

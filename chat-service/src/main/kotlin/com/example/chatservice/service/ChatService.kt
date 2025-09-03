@@ -91,6 +91,7 @@ class ChatService(
     }
 
     suspend fun insertDirectChat(directChatMessageRequest: DirectChatMessageRequest): DirectChatMessageResponse {
+        log.info { "insert direct chat message: $directChatMessageRequest" }
         val chatMessage = DirectChatMessage(
             id = snowflakeIdGenerator.nextId(),
             checked = false,
@@ -108,8 +109,8 @@ class ChatService(
         log.info { "inserted chat message: $savedChat" }
 
         return DirectChatMessageResponse(
-            fromUserId = savedChat.fromUserId,
-            toUserId = savedChat.toUserId,
+            fromUserEmail = directChatMessageRequest.fromUserEmail,
+            toUserEmail = directChatMessageRequest.toUserEmail,
             message = savedChat.message,
             createdTime = savedChat.createdAt,
         )

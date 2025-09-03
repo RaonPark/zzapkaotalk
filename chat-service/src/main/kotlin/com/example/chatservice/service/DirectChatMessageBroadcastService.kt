@@ -13,7 +13,7 @@ import java.time.ZoneOffset
 
 @Service
 class DirectChatMessageBroadcastService(
-    private val directChatMessageBroadcastKafkaTemplate: KafkaTemplate<Long, DirectChatMessageBroadcast>,
+    private val directChatMessageBroadcastKafkaTemplate: KafkaTemplate<String, DirectChatMessageBroadcast>,
     private val redisService: RedisService,
     private val chatMessageBroadcaster: MessageBroadcaster,
     private val webSocketManager: WebSocketManager
@@ -26,19 +26,16 @@ class DirectChatMessageBroadcastService(
         val avro = convertDtoToAvro(directChatMessageRequest)
 
         directChatMessageBroadcastKafkaTemplate.executeInTransaction {
-            it.send("direct-chat-broadcast", avro.fromUserId, avro)
+            it.send("direct-chat-broadcast", avro.fromUserEmail, avro)
         }
     }
 
     private suspend fun convertDtoToAvro(dto: DirectChatMessageRequest): DirectChatMessageBroadcast {
-        val fromUserId = redisService.getUserFromCacheIfMissFromDB(dto.fromUserEmail).id
-        val toUserId = redisService.getUserFromCacheIfMissFromDB(dto.toUserEmail).id
-
         return DirectChatMessageBroadcast.newBuilder()
             .setMessage(dto.message)
             .setCreatedTime(dto.timestamp.toInstant(ZoneOffset.of("+9")))
-            .setToUserId(toUserId)
-            .setFromUserId(fromUserId)
+            .setToUserEmail(dto.toUserEmail)
+            .setFromUserEmail(dto.fromUserEmail)
             .build()
     }
 
@@ -53,7 +50,7 @@ class DirectChatMessageBroadcastService(
 
         log.info { "Received message $message" }
 
-        if(webSocketManager.userConnected(message.toUserId)) {
+        if(webSocketManager.userConnected(message.toUserEmail)) {
             chatMessageBroadcaster.broadcastToDirect(message)
         } else {
             // TODO(DLQ를 사용하여 메세지를 재전송해본다.)

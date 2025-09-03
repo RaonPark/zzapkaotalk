@@ -3,6 +3,7 @@ package com.example.chatservice.controller
 import com.chatservice.GroupChatMessageBroadcast
 import com.example.chatservice.dto.DirectChatMessageRequest
 import com.example.chatservice.dto.DirectChatMessageResponse
+import com.example.chatservice.dto.DirectChatSendResponse
 import com.example.chatservice.dto.DirectChatStreamRequest
 import com.example.chatservice.dto.GroupChatMessageRequest
 import com.example.chatservice.reactive.entity.User
@@ -10,12 +11,14 @@ import com.example.chatservice.service.*
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.flow.Flow
 import org.springframework.data.redis.core.ReactiveRedisOperations
+import org.springframework.http.HttpStatus
 import org.springframework.messaging.handler.annotation.DestinationVariable
 import org.springframework.messaging.handler.annotation.MessageMapping
 import org.springframework.messaging.handler.annotation.Payload
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.security.oauth2.jwt.Jwt
 import org.springframework.stereotype.Controller
+import java.time.LocalDateTime
 
 @Controller
 class WebSocketController(
@@ -64,7 +67,7 @@ class WebSocketController(
     @MessageMapping("chat.direct.send")
     suspend fun chattingDirect(
         @Payload directChatMessage: DirectChatMessageRequest,
-    ) {
+    ): DirectChatSendResponse {
         log.info { "Received direct: $directChatMessage" }
 
         // insert chat in DB
@@ -73,6 +76,11 @@ class WebSocketController(
         log.info { "Direct Chat Saved: $chatMessageResponse" }
 
         directChatMessageBroadcastService.directChatMessageBroadcast(directChatMessage)
+
+        return DirectChatSendResponse(
+            HttpStatus.OK,
+            LocalDateTime.now().toString()
+        )
     }
 
     @MessageMapping("chat.direct.previous")

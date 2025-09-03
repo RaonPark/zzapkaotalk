@@ -46,15 +46,23 @@ class MessageBroadcaster(
         val toUser = redisService.getUserFromCacheIfMissFromDB(toUserEmail)
         return directChatMessageReactiveRepository.findByFromUserIdAndToUserId(fromUserId = fromUser.id, toUserId = toUser.id)
             .map { directChatMessage ->
-                directChatMessageConverter.modelToResponse(directChatMessage)
+                val response = directChatMessageConverter.modelToResponse(directChatMessage)
+
+                response.fromUserEmail = if(directChatMessage.fromUserId == fromUser.id) fromUser.email else toUser.email
+                response.toUserEmail = if(directChatMessage.fromUserId == fromUser.id) fromUser.email else toUser.email
+
+                log.info { "${response.fromUserEmail} to ${response.toUserEmail}" }
+
+                response
             }
     }
 
     suspend fun broadcastToDirect(broadcast: DirectChatMessageBroadcast) {
-        directChatFlow[broadcast.toUserId]?.emit(
+        val toUserId = redisService.getUserFromCacheIfMissFromDB(broadcast.toUserEmail).id
+        directChatFlow[toUserId]?.emit(
             DirectChatMessageResponse(
-                fromUserId = broadcast.fromUserId,
-                toUserId = broadcast.toUserId,
+                fromUserEmail = broadcast.fromUserEmail,
+                toUserEmail = broadcast.toUserEmail,
                 message = broadcast.message,
                 createdTime = LocalDateTime.ofInstant(broadcast.createdTime, ZoneOffset.of("+9"))
             )

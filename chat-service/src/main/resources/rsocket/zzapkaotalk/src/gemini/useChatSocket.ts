@@ -1,9 +1,8 @@
 // src/hooks/useChatSocket.ts
-import { useState, useEffect, useRef } from 'react';
+import {useState, useEffect, useRef, useReducer} from 'react';
 import {
     RSocketClient,
     BufferEncoders,
-    JsonSerializer,
     IdentitySerializer,
     encodeCompositeMetadata,
     encodeRoute,
@@ -12,19 +11,47 @@ import {
     MESSAGE_RSOCKET_COMPOSITE_METADATA, encodeBearerAuthMetadata,
 } from 'rsocket-core';
 import RSocketWebSocketClient from 'rsocket-websocket-client';
-import type {DirectMessageResponse, DirectMessageRequest} from './types';
+import type {
+    DirectMessageResponse, DirectMessageRequest, DirectMessagePayload, DirectChatStreamRequest,
+    DirectChatSendResponse
+} from './types';
 import type {ReactiveSocket} from "rsocket-types";
 import axios from "axios";
 import {Buffer} from "buffer";
 
 // 백엔드 주소와 라우팅 경로
 const API_URL = 'ws://localhost:8084/rsocket';
-const MESSAGE_STREAM_ROUTE = 'chat.stream.direct';
 const MESSAGE_SEND_ROUTE = 'chat.direct.send';
 
-export const useChatSocket = (username: string) => {
-    const [messages, setMessages] = useState<DirectMessageResponse[]>([]);
-    const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'connected' | 'error'>('connecting');
+type ConnectionStatus = 'connecting' | 'connected' | 'disconnected' | 'buddyConnected' | 'error';
+
+type Action =
+    | { type: 'CONNECT' }
+    | { type: 'DISCONNECT' }
+    | { type: 'ERROR' }
+    | { type: 'CONNECTED' }
+    | { type: 'BUDDY_CONNECTED' }
+
+function reducer(state: ConnectionStatus, action: Action): ConnectionStatus {
+    switch (action.type) {
+        case 'CONNECT':
+            return 'connecting';
+        case 'DISCONNECT':
+            return 'disconnected';
+        case 'ERROR':
+            return 'error';
+        case 'CONNECTED':
+            return 'connected';
+        case 'BUDDY_CONNECTED':
+            return 'buddyConnected';
+        default:
+            return state;
+    }
+}
+
+export const useChatSocket = (username: string, buddyEmail?: string) => {
+    const [messages, setMessages] = useState<DirectMessagePayload[]>([]);
+    const [connectionStatus, setConnectionStatus] = useReducer(reducer, 'connecting')
     const rsocketRef = useRef<ReactiveSocket<any, any> | null>(null);
     const [jwt, setJwt] = useState<string>('');
 
@@ -83,24 +110,26 @@ export const useChatSocket = (username: string) => {
 
         connector.connect().subscribe({
             onComplete: (socket) => {
-                setConnectionStatus('connected');
+                setConnectionStatus({ type: 'CONNECTED' });
                 console.log('rsocket connected');
-                console.log(socket.connectionStatus())
                 rsocketRef.current = socket;
 
                 socket.requestStream({
-                    data: Buffer.from("tom@gmail.com"),
+                    data: Buffer.from(buddyEmail!),
                     metadata: encodeCompositeMetadata([
                         [MESSAGE_RSOCKET_ROUTING, encodeRoute('chat.direct.previous')],
                         [MESSAGE_RSOCKET_AUTHENTICATION, encodeBearerAuthMetadata(jwt)]
                     ])
                 }).subscribe({
                     onNext: (payload) => {
-                        console.log(payload.data?.toString('utf-8')!!);
+                        setConnectionStatus({ type: 'BUDDY_CONNECTED' });
+                        console.log(payload.data?.toString('utf-8'));
                         const newMessage: Omit<DirectMessageResponse, 'isOwnMessage'> = JSON.parse(
                             payload.data?.toString('utf-8')!!
                         )
-                        setMessages(prev => [...prev, {...newMessage, isOwnMessage: newMessage.fromUserId == username}]);
+
+                        console.log("new Message : " + newMessage.fromUserEmail + `${username}`);
+                        setMessages(prev => [...prev, {...newMessage, isOwnMessage: newMessage.fromUserEmail == username}]);
                     },
                     onError: (e) => {
                         if(e.message.includes("expired")) {
@@ -113,42 +142,76 @@ export const useChatSocket = (username: string) => {
                         subscription.request(1000);
                     }
                 });
+
+                const streamRequest: DirectChatStreamRequest = {
+                    fromUserEmail: username,
+                    toUserEmail: buddyEmail!,
+                }
+
+                socket.requestStream({
+                    data: Buffer.from(JSON.stringify(streamRequest)),
+                    metadata: encodeCompositeMetadata([
+                        [MESSAGE_RSOCKET_ROUTING, encodeRoute('chat.direct.stream')],
+                        [MESSAGE_RSOCKET_AUTHENTICATION, encodeBearerAuthMetadata(jwt)]
+                    ])
+                }).subscribe({
+                    onNext: (payload) => {
+                        console.log("request stream: " + payload.data);
+                        const newMessage: Omit<DirectMessageResponse, 'isOwnMessage'> = JSON.parse(
+                            payload.data?.toString('utf-8')!!
+                        )
+                        setMessages(prev => [...prev, {...newMessage, isOwnMessage: newMessage.fromUserEmail == username}]);
+                    }
+                })
             },
             onError: (e) => {
                 console.log(e);
             }
         })
-    }, [jwt]);
+    }, [jwt, buddyEmail]);
 
-    // 메시지 전송 함수 (fireAndForget)
     const sendMessage = (text: string) => {
-        if (!rsocketRef.current || text.trim() === '') return;
+        if (!rsocketRef.current || text.trim() === '' || buddyEmail === '' || buddyEmail === undefined) return;
 
         const messageToSend: DirectMessageRequest = {
-            fromUserEmail: "raonpark@naver.com",
-            toUserEmail: "tom@gmail.com",
+            fromUserEmail: username,
+            toUserEmail: buddyEmail,
             message: text,
             timestamp: new Date().toISOString(),
         }
-
-        const message: DirectMessageResponse = {
-            fromUserId: "raonpark@naver.com",
-            toUserId: "tom@gmail.com",
-            message: text,
-            timestamp: new Date().toISOString(),
-        }
-
-        setMessages(prev => [...prev, {...message}]);
 
         console.log(messageToSend)
 
-        rsocketRef.current.fireAndForget({
+        rsocketRef.current.requestResponse({
             data: Buffer.from(JSON.stringify(messageToSend)),
             metadata: encodeCompositeMetadata([
                 [MESSAGE_RSOCKET_AUTHENTICATION, encodeBearerAuthMetadata(jwt)],
                 [MESSAGE_RSOCKET_ROUTING, encodeRoute(MESSAGE_SEND_ROUTE)]
             ])
-        });
+        }).subscribe({
+            onComplete: (payload) => {
+                const response = JSON.parse(payload.data?.toString('utf-8')) as DirectChatSendResponse;
+
+                if(response.status == 'OK') {
+                    const newMessage: DirectMessagePayload = {
+                        fromUserEmail: username,
+                        toUserEmail: buddyEmail,
+                        message: text,
+                        timestamp: new Date(response.timestamp).toISOString(),
+                        isOwnMessage: true,
+                    };
+
+                    setMessages(prev => [...prev, newMessage]);
+                }
+                else {
+                    alert("메세지가 전송되지 못했습니다.");
+                }
+
+            },
+            onError: (e) => {
+                console.log(e)
+            }
+        })
     };
 
     return { messages, sendMessage, connectionStatus };

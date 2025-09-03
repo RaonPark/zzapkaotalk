@@ -25,8 +25,8 @@ class WebSocketManager(
             ?: throw IllegalStateException("Current instance ID is missing")
     }
 
-    suspend fun userConnected(toUserId: Long): Boolean {
-        val user = websocketManagerRedisTemplate.opsForValue()["session:$toUserId"]
+    suspend fun userConnected(toUserEmail: String): Boolean {
+        val user = websocketManagerRedisTemplate.opsForValue()["session:$toUserEmail"]
             .awaitSingleOrNull() ?: return false
         return user.websocketServer == currentInstanceId
     }

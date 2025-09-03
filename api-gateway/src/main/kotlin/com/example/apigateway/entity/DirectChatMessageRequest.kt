@@ -4,7 +4,7 @@ import java.time.LocalDateTime
 
 data class DirectChatMessageRequest(
     val message: String,
-    val fromUserEmail: String,
+    var fromUserEmail: String,
     val toUserEmail: String,
     val timestamp: LocalDateTime,
 )
